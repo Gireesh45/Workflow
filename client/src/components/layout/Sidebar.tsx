@@ -1,12 +1,12 @@
 import { FC } from "react";
 import { useLocation, Link } from "wouter";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { List, Settings, HelpCircle, LogOut } from "lucide-react";
 
 const Sidebar: FC = () => {
   const [location] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logoutMutation } = useAuth();
   
   const isActive = (path: string) => location === path;
   
@@ -18,11 +18,15 @@ const Sidebar: FC = () => {
       .toUpperCase();
   };
   
-  const userInitials = user?.displayName 
-    ? getInitials(user.displayName) 
+  const userInitials = user?.username 
+    ? user.username.charAt(0).toUpperCase() 
     : user?.email 
       ? user.email.charAt(0).toUpperCase() 
       : "U";
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
   
   return (
     <>
@@ -36,26 +40,26 @@ const Sidebar: FC = () => {
           <ul className="space-y-2">
             <li>
               <Link href="/workflows">
-                <a className={`flex items-center px-3 py-2 text-neutral-700 rounded-md ${isActive("/workflows") ? "bg-neutral-100 font-medium" : "hover:bg-neutral-100"}`}>
+                <div className={`flex items-center px-3 py-2 text-neutral-700 rounded-md cursor-pointer ${isActive("/workflows") ? "bg-neutral-100 font-medium" : "hover:bg-neutral-100"}`}>
                   <List className="h-5 w-5 mr-3 text-primary" />
                   Workflows
-                </a>
+                </div>
               </Link>
             </li>
             <li>
               <Link href="/settings">
-                <a className={`flex items-center px-3 py-2 text-neutral-600 rounded-md ${isActive("/settings") ? "bg-neutral-100 font-medium" : "hover:bg-neutral-100"}`}>
+                <div className={`flex items-center px-3 py-2 text-neutral-600 rounded-md cursor-pointer ${isActive("/settings") ? "bg-neutral-100 font-medium" : "hover:bg-neutral-100"}`}>
                   <Settings className="h-5 w-5 mr-3 text-neutral-500" />
                   Settings
-                </a>
+                </div>
               </Link>
             </li>
             <li>
               <Link href="/help">
-                <a className={`flex items-center px-3 py-2 text-neutral-600 rounded-md ${isActive("/help") ? "bg-neutral-100 font-medium" : "hover:bg-neutral-100"}`}>
+                <div className={`flex items-center px-3 py-2 text-neutral-600 rounded-md cursor-pointer ${isActive("/help") ? "bg-neutral-100 font-medium" : "hover:bg-neutral-100"}`}>
                   <HelpCircle className="h-5 w-5 mr-3 text-neutral-500" />
                   Help
-                </a>
+                </div>
               </Link>
             </li>
           </ul>
@@ -67,14 +71,14 @@ const Sidebar: FC = () => {
               <span>{userInitials}</span>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-neutral-800">{user?.displayName || "User"}</p>
+              <p className="text-sm font-medium text-neutral-800">{user?.username || "User"}</p>
               <p className="text-xs text-neutral-500">{user?.email}</p>
             </div>
             <Button
               variant="ghost"
               size="icon"
               className="ml-auto text-neutral-500 hover:text-neutral-700"
-              onClick={logout}
+              onClick={handleLogout}
               aria-label="Log out"
             >
               <LogOut className="h-5 w-5" />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   getWorkflow, 
   createWorkflow, 
@@ -32,7 +32,7 @@ export default function WorkflowEditorPage() {
     status: "IDLE",
     nodes: [],
     edges: [],
-    userId: user?.uid || "",
+    userId: user?.id.toString() || "",
   });
   
   const [isLoading, setIsLoading] = useState(workflowId ? true : false);
@@ -118,7 +118,7 @@ export default function WorkflowEditorPage() {
         // Create new workflow
         savedWorkflow = await createWorkflow({
           ...workflow,
-          userId: user.uid,
+          userId: user.id.toString(),
         });
         toast({
           title: "Success",
@@ -153,7 +153,7 @@ export default function WorkflowEditorPage() {
         status: "IDLE",
         nodes: [],
         edges: [],
-        userId: user?.uid || "",
+        userId: user?.id.toString() || "",
       });
     }
     

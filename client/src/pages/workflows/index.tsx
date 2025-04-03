@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { getUserWorkflows, searchWorkflows, Workflow } from "@/lib/firebase";
 import Sidebar from "@/components/layout/Sidebar";
 import WorkflowList from "@/components/workflow/WorkflowList";
@@ -22,7 +22,7 @@ export default function WorkflowsPage() {
 
       setIsLoading(true);
       try {
-        const data = await getUserWorkflows(user.uid);
+        const data = await getUserWorkflows(user.id.toString());
         setWorkflows(data);
       } catch (error) {
         console.error("Error loading workflows:", error);
@@ -43,10 +43,10 @@ export default function WorkflowsPage() {
     setIsLoading(true);
     try {
       if (query.trim() === "") {
-        const data = await getUserWorkflows(user.uid);
+        const data = await getUserWorkflows(user.id.toString());
         setWorkflows(data);
       } else {
-        const results = await searchWorkflows(user.uid, query);
+        const results = await searchWorkflows(user.id.toString(), query);
         setWorkflows(results);
       }
     } catch (error) {
@@ -65,12 +65,6 @@ export default function WorkflowsPage() {
   const handleEditWorkflow = (workflowId: string) => {
     setLocation(`/workflows/editor?id=${workflowId}`);
   };
-
-  // Redirect to login if not authenticated
-  if (!user && !isLoading) {
-    setLocation("/login");
-    return null;
-  }
 
   return (
     <div className="flex h-screen overflow-hidden">
