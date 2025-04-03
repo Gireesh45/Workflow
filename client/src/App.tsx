@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./lib/protected-route";
 
 // Pages
 import AuthPage from "@/pages/auth-page";
+import RegisterPage from "@/pages/register";
 import WorkflowsPage from "@/pages/workflows/index";
 import WorkflowEditorPage from "@/pages/workflows/editor";
 import SettingsPage from "@/pages/settings";
@@ -17,6 +18,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/register" component={RegisterPage} />
       <ProtectedRoute path="/workflows" component={WorkflowsPage} />
       <ProtectedRoute path="/workflows/editor" component={WorkflowEditorPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
