@@ -2,6 +2,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -18,11 +19,15 @@ export default function AuthPage() {
   const { loginMutation, registerMutation, user } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Redirect if user is already logged in
-  if (user) {
-    setLocation("/");
-    return null;
-  }
+  // Setup forms first, then handle redirects with useEffect
+  // This ensures consistent hook calls across renders
+  
+  // Handle redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
   // Initialize login form
   const loginForm = useForm<LoginFormValues>({
