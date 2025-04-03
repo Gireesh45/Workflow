@@ -7,7 +7,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import WorkflowList from "@/components/workflow/WorkflowList";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Sparkles } from "lucide-react";
 
 export default function WorkflowsPage() {
   const [location, setLocation] = useLocation();
@@ -61,6 +61,11 @@ export default function WorkflowsPage() {
   const handleCreateWorkflow = () => {
     setLocation("/workflows/editor");
   };
+  
+  // Create workflow with AI
+  const handleCreateAIWorkflow = () => {
+    setLocation("/workflows/new");
+  };
 
   // Handle workflow editing
   const handleEditWorkflow = (workflowId: string) => {
@@ -79,13 +84,21 @@ export default function WorkflowsPage() {
               <p className="text-neutral-600 mt-1">Manage and create your automation workflows</p>
             </div>
             
-            <div className="mt-4 md:mt-0">
+            <div className="mt-4 md:mt-0 flex space-x-3">
               <Button 
                 className="bg-primary text-white" 
                 onClick={handleCreateWorkflow}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create workflow
+              </Button>
+              <Button 
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
+                onClick={handleCreateAIWorkflow}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Assistant
               </Button>
             </div>
           </div>

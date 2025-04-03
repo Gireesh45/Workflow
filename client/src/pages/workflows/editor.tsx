@@ -10,10 +10,12 @@ import {
 import type { Workflow } from "@shared/schema";
 import Sidebar from "@/components/layout/Sidebar";
 import WorkflowCanvas from "@/components/workflow/WorkflowCanvas";
+import { WorkflowAnalyzer } from "@/components/workflow/WorkflowAnalyzer";
 import ConfirmRunModal from "@/components/workflow/ConfirmRunModal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, Play, Save } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, RefreshCw, Play, Save, LineChart, Cable } from "lucide-react";
 import { Node, Edge } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,7 +29,7 @@ export default function WorkflowEditorPage() {
   const workflowId = params.get("id");
 
   // Workflow state
-  const [workflow, setWorkflow] = useState<Partial<Workflow>>({
+  const [workflow, setWorkflow] = useState<Partial<Workflow> & {nodes: Node[], edges: Edge[]}>({
     name: "New Workflow",
     status: "IDLE",
     nodes: [],
@@ -49,7 +51,13 @@ export default function WorkflowEditorPage() {
       try {
         const data = await getWorkflow(workflowId);
         if (data) {
-          setWorkflow(data);
+          // Cast the nodes and edges to the correct types
+          const typedWorkflow = {
+            ...data,
+            nodes: Array.isArray(data.nodes) ? data.nodes : [],
+            edges: Array.isArray(data.edges) ? data.edges : []
+          };
+          setWorkflow(typedWorkflow);
         } else {
           toast({
             title: "Workflow not found",
@@ -85,7 +93,7 @@ export default function WorkflowEditorPage() {
 
   // Update nodes and edges
   const handleWorkflowUpdate = useCallback((nodes: Node[], edges: Edge[]) => {
-    setWorkflow((prev: Workflow) => ({
+    setWorkflow((prev) => ({
       ...prev,
       nodes,
       edges,
@@ -144,7 +152,15 @@ export default function WorkflowEditorPage() {
     if (workflowId) {
       // If editing, reload from server
       getWorkflow(workflowId).then((data: Workflow | null) => {
-        if (data) setWorkflow(data);
+        if (data) {
+          // Cast the nodes and edges to the correct types
+          const typedWorkflow = {
+            ...data,
+            nodes: Array.isArray(data.nodes) ? data.nodes : [],
+            edges: Array.isArray(data.edges) ? data.edges : []
+          };
+          setWorkflow(typedWorkflow);
+        }
       });
     } else {
       // If new, reset to empty
@@ -174,7 +190,12 @@ export default function WorkflowEditorPage() {
     setIsRunning(true);
     
     try {
-      const result = await executeWorkflow(workflow);
+      // Cast workflow to Workflow type for execution 
+      const workflowWithId = { 
+        ...workflow, 
+        id: Number(workflowId) || 0
+      } as Workflow;
+      const result = await executeWorkflow(workflowWithId);
       
       if (result.success) {
         toast({
@@ -186,7 +207,13 @@ export default function WorkflowEditorPage() {
         if (workflowId) {
           const updatedWorkflow = await getWorkflow(workflowId);
           if (updatedWorkflow) {
-            setWorkflow(updatedWorkflow);
+            // Cast the nodes and edges to the correct types
+            const typedWorkflow = {
+              ...updatedWorkflow,
+              nodes: Array.isArray(updatedWorkflow.nodes) ? updatedWorkflow.nodes : [],
+              edges: Array.isArray(updatedWorkflow.edges) ? updatedWorkflow.edges : []
+            };
+            setWorkflow(typedWorkflow);
           }
         }
       } else {
@@ -275,29 +302,79 @@ export default function WorkflowEditorPage() {
             </div>
           </div>
           
-          <div className="flex border-t border-neutral-200 px-2">
-            <Button variant="link" className="px-4 py-2 text-neutral-700 border-b-2 border-primary">
-              Editor
-            </Button>
-            <Button variant="link" className="px-4 py-2 text-neutral-500">
-              Settings
-            </Button>
-            <Button variant="link" className="px-4 py-2 text-neutral-500">
-              History
-            </Button>
-          </div>
+          <Tabs defaultValue="editor" className="w-full">
+            <TabsList className="border-b border-neutral-200 w-full justify-start rounded-none h-auto p-0">
+              <TabsTrigger 
+                value="editor" 
+                className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
+              >
+                <Cable className="h-4 w-4 mr-2" />
+                Editor
+              </TabsTrigger>
+              
+              {workflowId && (
+                <TabsTrigger 
+                  value="analysis" 
+                  className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
+                >
+                  <LineChart className="h-4 w-4 mr-2" />
+                  AI Analysis
+                </TabsTrigger>
+              )}
+              
+              <TabsTrigger 
+                value="settings" 
+                className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
+              >
+                Settings
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="history" 
+                className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
+              >
+                History
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         
-        <WorkflowCanvas 
-          nodes={workflow.nodes}
-          edges={workflow.edges}
-          isLoading={isLoading}
-          onChange={handleWorkflowUpdate}
-        />
+        <Tabs defaultValue="editor" className="flex-1 overflow-hidden">
+          <TabsContent value="editor" className="h-full m-0 p-0 data-[state=active]:flex-1 data-[state=active]:flex">
+            <WorkflowCanvas 
+              nodes={workflow.nodes}
+              edges={workflow.edges}
+              isLoading={isLoading}
+              onChange={handleWorkflowUpdate}
+            />
+          </TabsContent>
+          
+          <TabsContent value="analysis" className="m-0 p-6 overflow-y-auto">
+            {workflowId ? (
+              <WorkflowAnalyzer workflow={workflow as Workflow} />
+            ) : (
+              <div className="text-center p-6">
+                <p>Save your workflow first to access AI analysis</p>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="settings" className="m-0 p-6 overflow-y-auto">
+            <div className="text-center p-6">
+              <p>Workflow settings will be available soon</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="history" className="m-0 p-6 overflow-y-auto">
+            <div className="text-center p-6">
+              <p>Workflow execution history will be available soon</p>
+            </div>
+          </TabsContent>
+        </Tabs>
         
         <ConfirmRunModal 
           isOpen={showRunModal}
-          workflowName={workflow.name}
+          workflowName={workflow.name || ""}
           onClose={() => setShowRunModal(false)}
           onConfirm={handleConfirmRun}
         />

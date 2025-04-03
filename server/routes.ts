@@ -7,7 +7,8 @@ import {
   registerUserSchema,
   insertWorkflowSchema, 
   insertWorkflowResultSchema,
-  workflowStatus
+  workflowStatus,
+  socialLoginSchema
 } from "@shared/schema";
 import { setupAuth, requireAuth } from "./auth";
 import fetch from "node-fetch";
@@ -15,6 +16,125 @@ import fetch from "node-fetch";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
+  
+  // Social login endpoint
+  app.post("/api/social-login", async (req, res) => {
+    try {
+      // Validate request
+      const socialData = socialLoginSchema.parse(req.body);
+      
+      // Check if user already exists with this email
+      let user = await storage.getUserByEmail(socialData.email);
+      
+      if (!user) {
+        // Create new user if doesn't exist
+        user = await storage.createUser({
+          email: socialData.email,
+          username: socialData.username,
+          password: `social-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+          providerId: socialData.providerId,
+          provider: socialData.provider,
+          photoURL: socialData.photoURL || null
+        });
+      }
+      
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Error logging in" });
+        }
+        
+        res.status(200).json(user);
+      });
+    } catch (error) {
+      console.error("Social login error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Get user's workflows by user ID
+  app.get("/api/workflows/user/:userId", requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const currentUserId = (req.user as any).id;
+      
+      // Users can only view their own workflows
+      if (userId !== currentUserId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const workflows = await storage.getWorkflowsByUserId(userId);
+      res.json(workflows);
+    } catch (error) {
+      console.error("Error getting user workflows:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Search workflows
+  app.get("/api/workflows/search", requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      const query = req.query.query as string;
+      const currentUserId = (req.user as any).id;
+      
+      // Users can only search their own workflows
+      if (userId !== currentUserId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const workflows = await storage.searchWorkflows(userId, query);
+      res.json(workflows);
+    } catch (error) {
+      console.error("Error searching workflows:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Execute workflow (without ID)
+  app.post("/api/workflows/execute", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const workflow = req.body;
+      
+      // Check if user owns this workflow
+      if (workflow.userId && workflow.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Execute the workflow
+      const result = await executeWorkflow(workflow);
+      
+      // If workflow has an ID, save the result and update the workflow
+      if (workflow.id) {
+        // Save the workflow execution result
+        await storage.createWorkflowResult({
+          workflowId: workflow.id,
+          results: result.results || {},
+          status: result.success ? "PASSED" : "FAILED"
+        });
+        
+        // Update workflow status based on execution result
+        await storage.updateWorkflow(workflow.id, {
+          status: result.success ? "PASSED" : "FAILED",
+          lastRun: new Date()
+        });
+      }
+      
+      res.json({
+        success: result.success,
+        message: result.message,
+        results: result.results
+      });
+    } catch (error) {
+      console.error("Workflow execution error:", error);
+      res.status(500).json({ message: "Error executing workflow" });
+    }
+  });
 
   // Workflow routes
   app.get("/api/workflows", requireAuth, async (req, res) => {
@@ -163,6 +283,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Workflow execution error:", error);
       res.status(500).json({ message: "Error executing workflow" });
+    }
+  });
+  
+  // AI-powered workflow generation endpoint
+  app.post("/api/workflows/generate-template", requireAuth, async (req, res) => {
+    try {
+      const { description } = req.body;
+      
+      if (!description || typeof description !== 'string') {
+        return res.status(400).json({ message: "Description is required" });
+      }
+      
+      // Import dynamically to avoid loading Anthropic if not needed
+      const { generateWorkflowTemplate } = await import('./utils/anthropic');
+      
+      // Generate workflow template using AI
+      const template = await generateWorkflowTemplate(description);
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Workflow generation error:", error);
+      res.status(500).json({ message: "Error generating workflow template" });
+    }
+  });
+  
+  // AI-powered workflow analysis endpoint
+  app.post("/api/workflows/:id/analyze", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const workflowId = parseInt(req.params.id);
+      
+      // Verify workflow exists and belongs to user
+      const workflow = await storage.getWorkflow(workflowId);
+      if (!workflow) {
+        return res.status(404).json({ message: "Workflow not found" });
+      }
+      
+      if (workflow.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Import dynamically to avoid loading Anthropic if not needed
+      const { analyzeWorkflow } = await import('./utils/anthropic');
+      
+      // Analyze workflow using AI
+      const analysis = await analyzeWorkflow(workflow);
+      
+      res.json({ analysis });
+    } catch (error) {
+      console.error("Workflow analysis error:", error);
+      res.status(500).json({ message: "Error analyzing workflow" });
     }
   });
 

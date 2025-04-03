@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import RegisterPage from "@/pages/register";
 import WorkflowsPage from "@/pages/workflows/index";
 import WorkflowEditorPage from "@/pages/workflows/editor";
+import NewWorkflowPage from "@/pages/workflows/new";
 import SettingsPage from "@/pages/settings";
 import HelpPage from "@/pages/help";
 import NotFound from "@/pages/not-found";
@@ -18,8 +19,10 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/login" component={AuthPage} />
       <Route path="/register" component={RegisterPage} />
       <ProtectedRoute path="/workflows" component={WorkflowsPage} />
+      <ProtectedRoute path="/workflows/new" component={NewWorkflowPage} />
       <ProtectedRoute path="/workflows/editor" component={WorkflowEditorPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/help" component={HelpPage} />
