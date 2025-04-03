@@ -1,143 +1,25 @@
-import express, { type Express, Request, Response } from "express";
+import { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { 
   loginSchema, 
-  insertUserSchema, 
+  registerUserSchema,
   insertWorkflowSchema, 
+  insertWorkflowResultSchema,
   workflowStatus
 } from "@shared/schema";
-import bcrypt from "bcryptjs";
-import session from "express-session";
-import MemoryStore from "memorystore";
-
-// Create a session store backed by memorystore
-const SessionStore = MemoryStore(session);
+import { setupAuth, requireAuth } from "./auth";
+import fetch from "node-fetch";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up session middleware
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "workflow-management-secret",
-      resave: false,
-      saveUninitialized: false,
-      cookie: { secure: process.env.NODE_ENV === "production", maxAge: 24 * 60 * 60 * 1000 },
-      store: new SessionStore({
-        checkPeriod: 86400000, // prune expired entries every 24h
-      }),
-    })
-  );
-
-  // Authentication middleware
-  const requireAuth = (req: Request, res: Response, next: Function) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    next();
-  };
-
-  // Auth routes
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-      
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(userData.password, salt);
-      
-      // Create user
-      const user = await storage.createUser({
-        ...userData,
-        password: hashedPassword,
-      });
-      
-      // Set session
-      req.session.userId = user.id;
-      
-      res.status(201).json({ 
-        id: user.id, 
-        username: user.username, 
-        email: user.email 
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email, password } = loginSchema.parse(req.body);
-      
-      // Find user
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(400).json({ message: "Invalid credentials" });
-      }
-      
-      // Verify password
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: "Invalid credentials" });
-      }
-      
-      // Set session
-      req.session.userId = user.id;
-      
-      res.json({ 
-        id: user.id, 
-        username: user.username, 
-        email: user.email 
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Could not log out" });
-      }
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
-  app.get("/api/auth/me", async (req, res) => {
-    const userId = req.session.userId;
-    if (!userId) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    
-    const user = await storage.getUser(userId);
-    if (!user) {
-      req.session.destroy(() => {});
-      return res.status(401).json({ message: "User not found" });
-    }
-    
-    res.json({ 
-      id: user.id, 
-      username: user.username, 
-      email: user.email 
-    });
-  });
+  // Set up authentication
+  setupAuth(app);
 
   // Workflow routes
   app.get("/api/workflows", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.userId as number;
+      const userId = (req.user as any).id;
       const searchQuery = req.query.q as string | undefined;
       
       let workflows;
@@ -155,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/workflows", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.userId as number;
+      const userId = (req.user as any).id;
       const workflowData = insertWorkflowSchema.parse({
         ...req.body,
         userId
@@ -173,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/workflows/:id", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.userId as number;
+      const userId = (req.user as any).id;
       const workflowId = parseInt(req.params.id);
       
       const workflow = await storage.getWorkflow(workflowId);
@@ -194,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/workflows/:id", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.userId as number;
+      const userId = (req.user as any).id;
       const workflowId = parseInt(req.params.id);
       
       // Verify workflow exists and belongs to user
@@ -220,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/workflows/:id", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.userId as number;
+      const userId = (req.user as any).id;
       const workflowId = parseInt(req.params.id);
       
       // Verify workflow exists and belongs to user
@@ -244,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Workflow execution endpoint
   app.post("/api/workflows/:id/execute", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.userId as number;
+      const userId = (req.user as any).id;
       const workflowId = parseInt(req.params.id);
       
       // Verify workflow exists and belongs to user
@@ -258,12 +140,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Execute the workflow
-      // This is a simplified example - in a real app, you would:
-      // 1. Parse the workflow nodes and edges
-      // 2. Execute each node in the correct order based on edges
-      // 3. Handle API calls, email sending, etc.
-
       const result = await executeWorkflow(workflow);
+      
+      // Save the workflow execution result
+      await storage.createWorkflowResult({
+        workflowId,
+        results: result.results || {},
+        status: result.success ? "PASSED" : "FAILED"
+      });
       
       // Update workflow status based on execution result
       const updatedWorkflow = await storage.updateWorkflow(workflowId, {
@@ -277,6 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         workflow: updatedWorkflow
       });
     } catch (error) {
+      console.error("Workflow execution error:", error);
       res.status(500).json({ message: "Error executing workflow" });
     }
   });
@@ -309,7 +194,8 @@ async function executeWorkflow(workflow: any) {
   } catch (error) {
     return { 
       success: false, 
-      message: error instanceof Error ? error.message : "Unknown error" 
+      message: error instanceof Error ? error.message : "Unknown error",
+      results: {}
     };
   }
 }

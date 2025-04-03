@@ -1,4 +1,13 @@
-import { users, type User, type InsertUser, workflows, type Workflow, type InsertWorkflow } from "@shared/schema";
+import { 
+  users, type User, type InsertUser, 
+  workflows, type Workflow, type InsertWorkflow,
+  workflowResults, type WorkflowResult, type InsertWorkflowResult 
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, like, or, and } from "drizzle-orm";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 // Interface for storage operations
 export interface IStorage {
@@ -15,89 +24,105 @@ export interface IStorage {
   updateWorkflow(id: number, workflow: Partial<Workflow>): Promise<Workflow | undefined>;
   deleteWorkflow(id: number): Promise<boolean>;
   searchWorkflows(userId: number, query: string): Promise<Workflow[]>;
+  
+  // Workflow result operations
+  createWorkflowResult(result: InsertWorkflowResult): Promise<WorkflowResult>;
+  getWorkflowResults(workflowId: number): Promise<WorkflowResult[]>;
+  
+  // Session store for authentication
+  sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private workflows: Map<number, Workflow>;
-  private userIdCounter: number;
-  private workflowIdCounter: number;
-
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+  
   constructor() {
-    this.users = new Map();
-    this.workflows = new Map();
-    this.userIdCounter = 1;
-    this.workflowIdCounter = 1;
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
   }
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   // Workflow methods
   async createWorkflow(workflow: InsertWorkflow): Promise<Workflow> {
-    const id = this.workflowIdCounter++;
-    const newWorkflow: Workflow = { 
-      ...workflow, 
-      id, 
-      lastRun: workflow.lastRun || null 
-    };
-    this.workflows.set(id, newWorkflow);
+    const [newWorkflow] = await db.insert(workflows).values(workflow).returning();
     return newWorkflow;
   }
 
   async getWorkflow(id: number): Promise<Workflow | undefined> {
-    return this.workflows.get(id);
+    const [workflow] = await db.select().from(workflows).where(eq(workflows.id, id));
+    return workflow;
   }
 
   async getWorkflowsByUserId(userId: number): Promise<Workflow[]> {
-    return Array.from(this.workflows.values()).filter(
-      (workflow) => workflow.userId === userId
-    );
+    return await db.select().from(workflows).where(eq(workflows.userId, userId));
   }
 
   async updateWorkflow(id: number, workflowUpdate: Partial<Workflow>): Promise<Workflow | undefined> {
-    const workflow = this.workflows.get(id);
-    if (!workflow) return undefined;
-
-    const updatedWorkflow = { ...workflow, ...workflowUpdate };
-    this.workflows.set(id, updatedWorkflow);
+    const [updatedWorkflow] = await db
+      .update(workflows)
+      .set(workflowUpdate)
+      .where(eq(workflows.id, id))
+      .returning();
     return updatedWorkflow;
   }
 
   async deleteWorkflow(id: number): Promise<boolean> {
-    return this.workflows.delete(id);
+    const result = await db.delete(workflows).where(eq(workflows.id, id));
+    return result.count > 0;
   }
 
   async searchWorkflows(userId: number, query: string): Promise<Workflow[]> {
-    const lowercaseQuery = query.toLowerCase();
-    return Array.from(this.workflows.values()).filter(
-      (workflow) => 
-        workflow.userId === userId && 
-        (workflow.name.toLowerCase().includes(lowercaseQuery) || 
-         `WF-${workflow.id}`.toLowerCase().includes(lowercaseQuery))
-    );
+    const lowercaseQuery = `%${query.toLowerCase()}%`;
+    return await db
+      .select()
+      .from(workflows)
+      .where(
+        and(
+          eq(workflows.userId, userId),
+          or(
+            like(workflows.name.toLowerCase(), lowercaseQuery)
+          )
+        )
+      );
+  }
+  
+  // Workflow result methods
+  async createWorkflowResult(result: InsertWorkflowResult): Promise<WorkflowResult> {
+    const [newResult] = await db.insert(workflowResults).values(result).returning();
+    return newResult;
+  }
+  
+  async getWorkflowResults(workflowId: number): Promise<WorkflowResult[]> {
+    return await db
+      .select()
+      .from(workflowResults)
+      .where(eq(workflowResults.workflowId, workflowId))
+      .orderBy(workflowResults.executedAt, "desc");
   }
 }
 
-export const storage = new MemStorage();
+// Replace MemStorage with DatabaseStorage
+export const storage = new DatabaseStorage();

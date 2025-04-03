@@ -14,13 +14,13 @@ import { z } from "zod";
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerUserSchema>;
 
-export default function LoginPage() {
+export default function AuthPage() {
   const { loginMutation, registerMutation, user } = useAuth();
   const [, setLocation] = useLocation();
 
   // Redirect if user is already logged in
   if (user) {
-    setLocation("/workflows");
+    setLocation("/");
     return null;
   }
 
@@ -47,7 +47,7 @@ export default function LoginPage() {
   const handleLogin = (values: LoginFormValues) => {
     loginMutation.mutate(values, {
       onSuccess: () => {
-        setLocation("/workflows");
+        setLocation("/");
       }
     });
   };
@@ -56,7 +56,7 @@ export default function LoginPage() {
   const handleRegister = (values: RegisterFormValues) => {
     registerMutation.mutate(values, {
       onSuccess: () => {
-        setLocation("/workflows");
+        setLocation("/");
       }
     });
   };

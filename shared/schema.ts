@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Workflow status enum
@@ -27,6 +28,17 @@ export const workflows = pgTable("workflows", {
   lastRun: timestamp("last_run"),
   nodes: jsonb("nodes").notNull(),
   edges: jsonb("edges").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Workflow execution results table
+export const workflowResults = pgTable("workflow_results", {
+  id: serial("id").primaryKey(),
+  workflowId: integer("workflow_id").notNull().references(() => workflows.id),
+  results: jsonb("results").notNull(),
+  status: text("status", { enum: ["PASSED", "FAILED"] }).notNull(),
+  executedAt: timestamp("executed_at").defaultNow().notNull(),
 });
 
 // Node schema for workflow nodes
@@ -58,6 +70,13 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
 });
 
+// Register schema with validation
+export const registerUserSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 // Insert schema for workflows
 export const insertWorkflowSchema = createInsertSchema(workflows).pick({
   userId: true,
@@ -72,8 +91,15 @@ export const insertWorkflowSchema = createInsertSchema(workflows).pick({
 
 // Login schema
 export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+// Schema for workflow results
+export const insertWorkflowResultSchema = createInsertSchema(workflowResults).pick({
+  workflowId: true,
+  results: true,
+  status: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -81,3 +107,6 @@ export type User = typeof users.$inferSelect;
 
 export type InsertWorkflow = z.infer<typeof insertWorkflowSchema>;
 export type Workflow = typeof workflows.$inferSelect;
+
+export type InsertWorkflowResult = z.infer<typeof insertWorkflowResultSchema>;
+export type WorkflowResult = typeof workflowResults.$inferSelect;

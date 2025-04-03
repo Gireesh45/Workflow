@@ -2,10 +2,11 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "./lib/protected-route";
 
 // Pages
-import LoginPage from "@/pages/login";
+import AuthPage from "@/pages/auth-page";
 import WorkflowsPage from "@/pages/workflows/index";
 import WorkflowEditorPage from "@/pages/workflows/editor";
 import NotFound from "@/pages/not-found";
@@ -13,10 +14,10 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <Switch>
-      <Route path="/login" component={LoginPage} />
-      <Route path="/workflows" component={WorkflowsPage} />
-      <Route path="/workflows/editor" component={WorkflowEditorPage} />
-      <Route path="/" component={WorkflowsPage} />
+      <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/workflows" component={WorkflowsPage} />
+      <ProtectedRoute path="/workflows/editor" component={WorkflowEditorPage} />
+      <ProtectedRoute path="/" component={WorkflowsPage} />
       <Route component={NotFound} />
     </Switch>
   );
