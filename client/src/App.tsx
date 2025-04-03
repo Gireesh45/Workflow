@@ -9,6 +9,8 @@ import { ProtectedRoute } from "./lib/protected-route";
 import AuthPage from "@/pages/auth-page";
 import WorkflowsPage from "@/pages/workflows/index";
 import WorkflowEditorPage from "@/pages/workflows/editor";
+import SettingsPage from "@/pages/settings";
+import HelpPage from "@/pages/help";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +19,8 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/workflows" component={WorkflowsPage} />
       <ProtectedRoute path="/workflows/editor" component={WorkflowEditorPage} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/help" component={HelpPage} />
       <ProtectedRoute path="/" component={WorkflowsPage} />
       <Route component={NotFound} />
     </Switch>
