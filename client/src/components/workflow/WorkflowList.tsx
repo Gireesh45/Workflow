@@ -1,11 +1,11 @@
 import { FC, useState } from "react";
 import { Play, Edit2, MoreVertical } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Workflow } from "@/lib/firebase";
+import { Workflow } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmRunModal from "./ConfirmRunModal";
-import { executeWorkflow } from "@/lib/firebase";
+import { executeWorkflow } from "@/lib/workflow";
 import { useToast } from "@/hooks/use-toast";
 
 interface WorkflowListProps {

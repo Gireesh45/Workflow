@@ -4,7 +4,7 @@ import {
   workflowResults, type WorkflowResult, type InsertWorkflowResult 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, or, and } from "drizzle-orm";
+import { eq, like, or, and, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -16,6 +16,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, userData: Partial<User>): Promise<User>;
   
   // Workflow operations
   createWorkflow(workflow: InsertWorkflow): Promise<Workflow>;
@@ -65,6 +66,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUser(id: number, userData: Partial<User>): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
   // Workflow methods
   async createWorkflow(workflow: InsertWorkflow): Promise<Workflow> {
     const [newWorkflow] = await db.insert(workflows).values(workflow).returning();
@@ -90,8 +100,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteWorkflow(id: number): Promise<boolean> {
-    const result = await db.delete(workflows).where(eq(workflows.id, id));
-    return result.count > 0;
+    await db.delete(workflows).where(eq(workflows.id, id));
+    return true;
   }
 
   async searchWorkflows(userId: number, query: string): Promise<Workflow[]> {
@@ -103,7 +113,7 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(workflows.userId, userId),
           or(
-            like(workflows.name.toLowerCase(), lowercaseQuery)
+            like(sql`LOWER(${workflows.name})`, lowercaseQuery)
           )
         )
       );
@@ -120,7 +130,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(workflowResults)
       .where(eq(workflowResults.workflowId, workflowId))
-      .orderBy(workflowResults.executedAt, "desc");
+      .orderBy(sql`${workflowResults.executedAt} DESC`);
   }
 }
 

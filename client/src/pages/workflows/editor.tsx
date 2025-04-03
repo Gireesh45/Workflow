@@ -5,9 +5,9 @@ import {
   getWorkflow, 
   createWorkflow, 
   updateWorkflow,
-  executeWorkflow,
-  Workflow 
-} from "@/lib/firebase";
+  executeWorkflow
+} from "@/lib/workflow";
+import type { Workflow } from "@shared/schema";
 import Sidebar from "@/components/layout/Sidebar";
 import WorkflowCanvas from "@/components/workflow/WorkflowCanvas";
 import ConfirmRunModal from "@/components/workflow/ConfirmRunModal";
@@ -27,12 +27,12 @@ export default function WorkflowEditorPage() {
   const workflowId = params.get("id");
 
   // Workflow state
-  const [workflow, setWorkflow] = useState<Workflow>({
+  const [workflow, setWorkflow] = useState<Partial<Workflow>>({
     name: "New Workflow",
     status: "IDLE",
     nodes: [],
     edges: [],
-    userId: user?.id.toString() || "",
+    userId: user?.id ? Number(user.id) : undefined,
   });
   
   const [isLoading, setIsLoading] = useState(workflowId ? true : false);
@@ -85,7 +85,7 @@ export default function WorkflowEditorPage() {
 
   // Update nodes and edges
   const handleWorkflowUpdate = useCallback((nodes: Node[], edges: Edge[]) => {
-    setWorkflow(prev => ({
+    setWorkflow((prev: Workflow) => ({
       ...prev,
       nodes,
       edges,
@@ -118,7 +118,7 @@ export default function WorkflowEditorPage() {
         // Create new workflow
         savedWorkflow = await createWorkflow({
           ...workflow,
-          userId: user.id.toString(),
+          userId: Number(user.id),
         });
         toast({
           title: "Success",
@@ -143,7 +143,7 @@ export default function WorkflowEditorPage() {
   const handleReset = () => {
     if (workflowId) {
       // If editing, reload from server
-      getWorkflow(workflowId).then(data => {
+      getWorkflow(workflowId).then((data: Workflow | null) => {
         if (data) setWorkflow(data);
       });
     } else {
@@ -153,7 +153,7 @@ export default function WorkflowEditorPage() {
         status: "IDLE",
         nodes: [],
         edges: [],
-        userId: user?.id.toString() || "",
+        userId: user?.id ? Number(user.id) : undefined,
       });
     }
     

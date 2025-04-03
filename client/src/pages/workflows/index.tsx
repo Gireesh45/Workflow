@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { getUserWorkflows, searchWorkflows, Workflow } from "@/lib/firebase";
+import { getUserWorkflows, searchWorkflows } from "@/lib/workflow";
+import type { Workflow } from "@shared/schema";
 import Sidebar from "@/components/layout/Sidebar";
 import WorkflowList from "@/components/workflow/WorkflowList";
 import { Input } from "@/components/ui/input";

@@ -6,8 +6,11 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"),
   email: text("email").notNull().unique(),
+  providerId: text("provider_id"),
+  provider: text("provider"),
+  photoURL: text("photo_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -68,6 +71,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
+  providerId: true,
+  provider: true,
+  photoURL: true,
 });
 
 // Register schema with validation
@@ -95,6 +101,15 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+// Social login schema
+export const socialLoginSchema = z.object({
+  email: z.string().email("Email is required"),
+  username: z.string().min(1, "Display name is required"),
+  providerId: z.string().min(1, "Provider ID is required"),
+  provider: z.string().min(1, "Provider is required"),
+  photoURL: z.string().optional(),
+});
+
 // Schema for workflow results
 export const insertWorkflowResultSchema = createInsertSchema(workflowResults).pick({
   workflowId: true,
@@ -104,6 +119,7 @@ export const insertWorkflowResultSchema = createInsertSchema(workflowResults).pi
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type SocialLogin = z.infer<typeof socialLoginSchema>;
 
 export type InsertWorkflow = z.infer<typeof insertWorkflowSchema>;
 export type Workflow = typeof workflows.$inferSelect;

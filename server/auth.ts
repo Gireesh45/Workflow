@@ -5,7 +5,7 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User } from "@shared/schema";
+import { User, SocialLogin } from "@shared/schema";
 
 declare global {
   namespace Express {
@@ -161,6 +161,47 @@ export function setupAuth(app: Express): void {
     // Return user info (excluding password)
     const { password, ...userWithoutPassword } = req.user as User;
     res.json(userWithoutPassword);
+  });
+
+  // Social login endpoint
+  app.post("/api/social-login", async (req, res, next) => {
+    try {
+      const socialData: SocialLogin = req.body;
+      
+      // Check if user with this provider ID exists
+      let user = await storage.getUserByEmail(socialData.email);
+      
+      if (user) {
+        // If user exists but not with this provider, update their provider info
+        if (!user.providerId || user.providerId !== socialData.providerId) {
+          user = await storage.updateUser(user.id, {
+            providerId: socialData.providerId,
+            provider: socialData.provider,
+            photoURL: socialData.photoURL
+          });
+        }
+      } else {
+        // Create new user
+        user = await storage.createUser({
+          username: socialData.username,
+          email: socialData.email,
+          providerId: socialData.providerId,
+          provider: socialData.provider,
+          photoURL: socialData.photoURL
+        });
+      }
+
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) return next(err);
+        
+        // Don't return password in response
+        const { password, ...userWithoutPassword } = user;
+        return res.status(200).json(userWithoutPassword);
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 }
 
