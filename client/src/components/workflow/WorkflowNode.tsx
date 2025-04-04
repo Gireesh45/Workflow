@@ -250,33 +250,29 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               </div>
             )}
             
-            <div className="ml-auto">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full">
-                    <MoreHorizontal className="h-3.5 w-3.5 text-gray-500" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[160px]">
-                  {(type !== 'START' && type !== 'END') && (
+            {/* Only show menu for non-START and non-END nodes */}
+            {(type !== 'START' && type !== 'END') && (
+              <div className="ml-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full">
+                      <MoreHorizontal className="h-3.5 w-3.5 text-gray-500" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[160px]">
                     <DropdownMenuItem onClick={() => setShowEditModal(true)} className="cursor-pointer">
                       <Edit className="h-3.5 w-3.5 mr-2" />
                       <span>Edit</span>
                     </DropdownMenuItem>
-                  )}
-                  {/* Remove duplicate option but keep the delete option */}
-                  {(type !== 'START' && type !== 'END') && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-500 cursor-pointer">
-                        <Trash2 className="h-3.5 w-3.5 mr-2" />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-red-500 cursor-pointer">
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
           </div>
         </div>
         
