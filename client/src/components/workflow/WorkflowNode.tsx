@@ -343,16 +343,16 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <Button 
               type="button"
               onClick={() => {
+                const updatedData = {
+                  ...data,
+                  url: formData.url,
+                  method: formData.method,
+                  to: formData.to,
+                  subject: formData.subject,
+                  body: formData.body,
+                  text: formData.text,
+                };
                 if (data.onDataChange) {
-                  const updatedData = {
-                    ...data,
-                    url: formData.url,
-                    method: formData.method,
-                    to: formData.to,
-                    subject: formData.subject,
-                    body: formData.body,
-                    text: formData.text
-                  };
                   data.onDataChange(id, updatedData);
                 }
                 setShowEditModal(false);
