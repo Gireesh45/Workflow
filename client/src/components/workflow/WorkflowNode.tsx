@@ -264,10 +264,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                       <span>Edit</span>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Copy className="h-3.5 w-3.5 mr-2" />
-                    <span>Duplicate</span>
-                  </DropdownMenuItem>
+                  {/* Remove duplicate option but keep the delete option */}
                   {(type !== 'START' && type !== 'END') && (
                     <>
                       <DropdownMenuSeparator />
@@ -301,12 +298,19 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <div className="truncate">
               Subject: {data.subject || 'Email Subject'}
             </div>
+            {data.body && (
+              <div className="mt-1 text-xs text-gray-500 border-t border-gray-100 pt-1">
+                <div className="line-clamp-2 text-xs italic">
+                  {data.body}
+                </div>
+              </div>
+            )}
           </div>
         )}
         
         {type === 'TEXT' && (
           <div className="px-3 py-2 text-xs text-gray-500">
-            <div className="truncate">
+            <div className="line-clamp-3">
               {data.text || 'Text content...'}
             </div>
           </div>
