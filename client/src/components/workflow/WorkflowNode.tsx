@@ -12,6 +12,7 @@ import {
   Plus,
   X,
   Copy,
+  FileText,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +44,7 @@ interface NodeData {
   to?: string;
   subject?: string;
   body?: string;
+  text?: string;
   onDataChange?: (id: string, data: any) => void;
 }
 
@@ -63,6 +65,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         return <Code className="h-4 w-4" />;
       case 'EMAIL':
         return <Mail className="h-4 w-4" />;
+      case 'TEXT':
+        return <FileText className="h-4 w-4" />;
       case 'CONDITION':
         return <GitBranch className="h-4 w-4" />;
       case 'END':
@@ -80,6 +84,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         return 'bg-blue-500';
       case 'EMAIL':
         return 'bg-green-500';
+      case 'TEXT':
+        return 'bg-purple-500';
       case 'CONDITION':
         return 'bg-purple-600';
       case 'END':
@@ -94,9 +100,11 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
       case 'START':
         return 'Start';
       case 'API':
-        return 'API Request';
+        return 'API Call';
       case 'EMAIL':
-        return 'Send Email';
+        return 'Email';
+      case 'TEXT':
+        return 'Text Box';
       case 'CONDITION':
         return 'Condition';
       case 'END':
@@ -179,6 +187,21 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
           </>
         );
         
+      case 'TEXT':
+        return (
+          <>
+            <div className="mb-4">
+              <Label className="text-sm font-medium mb-1 block">Text Content</Label>
+              <Textarea
+                value={data.text || ''}
+                onChange={(e) => handleDataChange('text', e.target.value)}
+                className="w-full min-h-[120px]"
+                placeholder="Enter text content here..."
+              />
+            </div>
+          </>
+        );
+        
       case 'CONDITION':
         return (
           <div className="text-center py-4">
@@ -250,6 +273,14 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             </div>
             <div className="truncate">
               Subject: {data.subject || 'Email Subject'}
+            </div>
+          </div>
+        )}
+        
+        {type === 'TEXT' && (
+          <div className="px-3 py-2 text-xs text-gray-500">
+            <div className="truncate">
+              {data.text || 'Text content...'}
             </div>
           </div>
         )}

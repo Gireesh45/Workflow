@@ -19,12 +19,23 @@ import ReactFlow, {
   OnConnect,
   OnNodesChange,
   OnEdgesChange,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
-import { Node, Edge } from '@shared/schema';
-import WorkflowNode from './WorkflowNode';
-import { Play, Code, Mail, GitBranch, Square, ZoomIn, ZoomOut, Maximize, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Node, Edge, NodeType } from '@shared/schema';
+import WorkflowNode from '@/components/workflow/WorkflowNode';
+import AddNodeButton from '@/components/workflow/AddNodeButton';
+import { 
+  Play, 
+  Code, 
+  Mail, 
+  FileText, 
+  Square, 
+  ZoomIn, 
+  ZoomOut, 
+  Plus,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface WorkflowCanvasProps {
@@ -39,51 +50,23 @@ const nodeTypes: NodeTypes = {
   START: WorkflowNode,
   API: WorkflowNode,
   EMAIL: WorkflowNode,
-  CONDITION: WorkflowNode,
+  TEXT: WorkflowNode,
   END: WorkflowNode,
 };
 
 // Available node types for the palette
 const nodeOptions = [
-  { type: 'START', label: 'Start', icon: Play, color: 'bg-green-600' },
-  { type: 'END', label: 'End', icon: Square, color: 'bg-red-500' },
+  { type: 'API', label: 'API Call', icon: Code, color: 'bg-blue-500' },
+  { type: 'EMAIL', label: 'Email', icon: Mail, color: 'bg-green-500' },
+  { type: 'TEXT', label: 'Text Box', icon: FileText, color: 'bg-purple-500' },
 ];
 
 const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoading, onChange }) => {
   const reactFlowInstance = useReactFlow();
   const [reactFlowNodes, setReactFlowNodes] = useState<FlowNode[]>(nodes as FlowNode[]);
   const [reactFlowEdges, setReactFlowEdges] = useState<FlowEdge[]>(edges as FlowEdge[]);
-
-  // Initialize with default nodes if empty
-  useCallback(() => {
-    if (reactFlowNodes.length === 0) {
-      // Add a default start and end node
-      const startNode: FlowNode = {
-        id: 'start-node',
-        type: 'START',
-        position: { x: 400, y: 120 },
-        data: { onDataChange: onNodeDataChange },
-      };
-      
-      const endNode: FlowNode = {
-        id: 'end-node',
-        type: 'END',
-        position: { x: 400, y: 220 },
-        data: { onDataChange: onNodeDataChange },
-      };
-      
-      const connection: FlowEdge = {
-        id: 'edge-start-end',
-        source: 'start-node',
-        target: 'end-node',
-      };
-      
-      setReactFlowNodes([startNode, endNode]);
-      setReactFlowEdges([connection]);
-      onChange([startNode, endNode] as Node[], [connection] as Edge[]);
-    }
-  }, []);
-
+  const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
+  
   // Handle node changes (move, select, etc.)
   const onNodesChange: OnNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -110,6 +93,11 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
       const newEdge = {
         ...connection,
         id: `e${uuidv4()}`,
+        animated: true,
+        style: { strokeWidth: 2 },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
       };
       const updatedEdges = addEdge(newEdge, reactFlowEdges);
       setReactFlowEdges(updatedEdges);
@@ -133,6 +121,83 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
     [reactFlowNodes, reactFlowEdges, onChange]
   );
 
+  // Find a node by its ID
+  const getNodeById = useCallback(
+    (id: string) => {
+      return reactFlowNodes.find(node => node.id === id);
+    },
+    [reactFlowNodes]
+  );
+
+  // Add a new node between two connected nodes
+  const addNodeBetween = useCallback(
+    (sourceId: string, targetId: string, edgeId: string, nodeType: NodeType) => {
+      // Get the source and target nodes
+      const sourceNode = getNodeById(sourceId);
+      const targetNode = getNodeById(targetId);
+      
+      if (!sourceNode || !targetNode) return;
+      
+      // Calculate the position for the new node (midpoint between source and target)
+      const position = {
+        x: (sourceNode.position.x + targetNode.position.x) / 2,
+        y: (sourceNode.position.y + targetNode.position.y) / 2,
+      };
+      
+      // Create the new node
+      const newNode: FlowNode = {
+        id: `node-${uuidv4()}`,
+        type: nodeType,
+        position,
+        data: { 
+          onDataChange: onNodeDataChange,
+          // Default data based on node type
+          ...(nodeType === 'API' && { method: 'GET', url: 'https://api.example.com/data' }),
+          ...(nodeType === 'EMAIL' && { to: 'recipient@example.com', subject: 'Email Subject' }),
+          ...(nodeType === 'TEXT' && { text: 'Text content...' }),
+        },
+      };
+      
+      // Remove the original edge
+      const filteredEdges = reactFlowEdges.filter(edge => edge.id !== edgeId);
+      
+      // Create two new edges: source -> new node and new node -> target
+      const edge1: FlowEdge = {
+        id: `e${uuidv4()}`,
+        source: sourceId,
+        target: newNode.id,
+        animated: true,
+        style: { strokeWidth: 2 },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
+      };
+      
+      const edge2: FlowEdge = {
+        id: `e${uuidv4()}`,
+        source: newNode.id,
+        target: targetId,
+        animated: true,
+        style: { strokeWidth: 2 },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
+      };
+      
+      // Update state with the new node and edges
+      const updatedNodes = [...reactFlowNodes, newNode];
+      const updatedEdges = [...filteredEdges, edge1, edge2];
+      
+      setReactFlowNodes(updatedNodes);
+      setReactFlowEdges(updatedEdges);
+      onChange(updatedNodes as Node[], updatedEdges as Edge[]);
+      
+      // Clear the selected edge
+      setSelectedEdge(null);
+    },
+    [reactFlowNodes, reactFlowEdges, getNodeById, onChange, onNodeDataChange]
+  );
+
   // Create a new node on drop
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -151,13 +216,14 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
 
       const newNode: FlowNode = {
         id: `node-${uuidv4()}`,
-        type: type,
+        type: type as NodeType,
         position,
         data: { 
           onDataChange: onNodeDataChange,
           // Default data based on node type
           ...(type === 'API' && { method: 'GET', url: 'https://api.example.com/data' }),
-          ...(type === 'EMAIL' && { to: 'recipient@example.com', subject: 'API Data Results' }),
+          ...(type === 'EMAIL' && { to: 'recipient@example.com', subject: 'Email Subject' }),
+          ...(type === 'TEXT' && { text: 'Text content...' }),
         },
       };
 
@@ -182,8 +248,36 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
     reactFlowInstance.zoomOut();
   };
 
-  const resetView = () => {
-    reactFlowInstance.fitView();
+  const handleEdgeClick = (event: React.MouseEvent, edge: FlowEdge) => {
+    event.stopPropagation();
+    setSelectedEdge(edge.id);
+  };
+
+  const handlePaneClick = () => {
+    setSelectedEdge(null);
+  };
+
+  // Custom edge with a plus button
+  const edgeWithPlusButton = useCallback(
+    ({ id, source, target }: FlowEdge) => {
+      // For custom edges with buttons
+      return (
+        <AddNodeButton
+          id={id}
+          source={source}
+          target={target}
+          isSelected={selectedEdge === id}
+          onAddNode={(type: string) => addNodeBetween(source, target, id, type as NodeType)}
+          nodeOptions={nodeOptions}
+        />
+      );
+    },
+    [selectedEdge, addNodeBetween]
+  );
+
+  // Add a custom edge type
+  const edgeTypes = {
+    plusButtonEdge: edgeWithPlusButton,
   };
 
   return (
@@ -215,22 +309,29 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              onEdgeClick={handleEdgeClick}
+              onPaneClick={handlePaneClick}
               nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
               fitView
               snapToGrid
               snapGrid={[15, 15]}
-              className="bg-[#f8f6ea]"
+              className="bg-[#f9f7e8]"
               minZoom={0.2}
               maxZoom={2}
               defaultEdgeOptions={{
                 animated: true,
-                style: { strokeWidth: 2, stroke: '#888' },
+                style: { strokeWidth: 2 },
+                type: 'plusButtonEdge',
+                markerEnd: {
+                  type: MarkerType.ArrowClosed,
+                },
               }}
             >
               <Background 
                 color="#ddd"
                 gap={20} 
-                size={1} 
+                size={1}
               />
             </ReactFlow>
           </div>
@@ -240,35 +341,98 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
   );
 };
 
+// Create the default workflow structure
+const createDefaultWorkflow = () => {
+  // Default start and end nodes
+  const startNode: Node = {
+    id: 'start-node',
+    type: 'START',
+    position: { x: 400, y: 100 },
+    data: {},
+  };
+  
+  const endNode: Node = {
+    id: 'end-node',
+    type: 'END',
+    position: { x: 400, y: 500 },
+    data: {},
+  };
+  
+  // Add default nodes for the example workflow
+  const apiNode: Node = {
+    id: 'api-node',
+    type: 'API',
+    position: { x: 400, y: 200 },
+    data: { 
+      method: 'GET', 
+      url: 'https://api.example.com/data' 
+    },
+  };
+  
+  const emailNode: Node = {
+    id: 'email-node',
+    type: 'EMAIL',
+    position: { x: 400, y: 300 },
+    data: { 
+      to: 'recipient@example.com', 
+      subject: 'Email Subject' 
+    },
+  };
+  
+  const textNode: Node = {
+    id: 'text-node',
+    type: 'TEXT',
+    position: { x: 400, y: 400 },
+    data: { 
+      text: 'Text content...' 
+    },
+  };
+  
+  // Connect all nodes in sequence
+  const edges: Edge[] = [
+    {
+      id: 'edge-start-api',
+      source: 'start-node',
+      target: 'api-node',
+      type: 'plusButtonEdge',
+    },
+    {
+      id: 'edge-api-email',
+      source: 'api-node',
+      target: 'email-node',
+      type: 'plusButtonEdge',
+    },
+    {
+      id: 'edge-email-text',
+      source: 'email-node',
+      target: 'text-node',
+      type: 'plusButtonEdge',
+    },
+    {
+      id: 'edge-text-end',
+      source: 'text-node',
+      target: 'end-node',
+      type: 'plusButtonEdge',
+    },
+  ];
+  
+  return {
+    nodes: [startNode, apiNode, emailNode, textNode, endNode],
+    edges,
+  };
+};
+
 // Wrap with ReactFlowProvider to access react-flow methods
 const WorkflowCanvas: FC<WorkflowCanvasProps> = (props) => {
   // Check if we need to initialize with default nodes
   const initializedProps = { ...props };
   
   if (props.nodes.length === 0 && !props.isLoading) {
-    // Add a default start and end node
-    const startNode: Node = {
-      id: 'start-node',
-      type: 'START',
-      position: { x: 400, y: 120 },
-      data: {},
-    };
+    // Use the function to create a default workflow
+    const { nodes, edges } = createDefaultWorkflow();
     
-    const endNode: Node = {
-      id: 'end-node',
-      type: 'END',
-      position: { x: 400, y: 220 },
-      data: {},
-    };
-    
-    const connection: Edge = {
-      id: 'edge-start-end',
-      source: 'start-node',
-      target: 'end-node',
-    };
-    
-    initializedProps.nodes = [startNode, endNode];
-    initializedProps.edges = [connection];
+    initializedProps.nodes = nodes;
+    initializedProps.edges = edges;
     
     // Call onChange to update the parent component
     if (!props.isLoading) {

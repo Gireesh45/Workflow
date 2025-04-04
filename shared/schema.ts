@@ -19,7 +19,7 @@ export const workflowStatus = z.enum(["PASSED", "FAILED", "IDLE"]);
 export type WorkflowStatus = z.infer<typeof workflowStatus>;
 
 // Node type enum
-export const nodeType = z.enum(["START", "END", "API", "EMAIL", "CONDITION"]);
+export const nodeType = z.enum(["START", "END", "API", "EMAIL", "TEXT", "CONDITION"]);
 export type NodeType = z.infer<typeof nodeType>;
 
 // Workflows table
@@ -64,6 +64,7 @@ export const edgeSchema = z.object({
   target: z.string(),
   sourceHandle: z.string().optional(),
   targetHandle: z.string().optional(),
+  type: z.string().optional(),
 });
 export type Edge = z.infer<typeof edgeSchema>;
 
