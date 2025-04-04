@@ -284,8 +284,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         {type === 'API' && (
           <div className="px-3 py-2 text-xs text-gray-500">
             <div className="flex items-start">
-              <span className="font-semibold mr-1 shrink-0">{data.method || 'GET'}</span>
-              <span className="truncate">{data.url || ''}</span>
+              <span className="font-semibold">{data.method || 'GET'}</span>
             </div>
           </div>
         )}
