@@ -64,21 +64,23 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
   });
 
   useEffect(() => {
-    setFormData({
+    setFormData((prev) => ({
+      ...prev,  // Preserve other form data
       url: data.url || '',
       method: data.method || 'GET',
       to: data.to || '',
       subject: data.subject || '',
       body: data.body || '',
       text: data.text || ''
-    });
+    }));
   }, [data]);
 
-  const handleDataChange = (key: string, value: any) => {
-    if (data.onDataChange) {
-      const newData = { ...data, [key]: value };
-      data.onDataChange(id, newData);
-    }
+  const handleNodeDataChange = (id, newData) => {
+    setNodes((prevNodes) => 
+      prevNodes.map(node => 
+        node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+      )
+    );
   };
 
   const getNodeIcon = () => {
@@ -347,7 +349,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             >
               Cancel
             </Button>
-            <Button 
+            {/* <Button 
               type="button"
               onClick={() => {
                   let updatedData = { ...data };
@@ -385,7 +387,28 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               Save Changes
+            </Button> */}
+            <Button 
+              type="button"
+              onClick={() => {
+                  const updatedData = {
+                    ...data, // Preserve existing data
+                    ...(type === 'API' && { url: formData.url, method: formData.method }),
+                    ...(type === 'EMAIL' && { to: formData.to, subject: formData.subject, body: formData.body }),
+                    ...(type === 'TEXT' && { text: formData.text }),
+                  };
+
+                  if (data.onDataChange) {
+                    data.onDataChange(id, updatedData);
+                  }
+
+                  setShowEditModal(false);
+                }}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Save Changes
             </Button>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>

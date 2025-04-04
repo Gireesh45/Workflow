@@ -1,0 +1,122 @@
+import { memo, FC, useState, useEffect } from 'react';
+import { Handle, Position, NodeProps } from 'reactflow';
+import { DialogContent, DialogFooter } from '@your/dialog/component';
+import { Button } from '@your/button/component';
+
+const WorkflowNode: FC<NodeProps> = ({ data, id, type }) => {
+  const [formData, setFormData] = useState({
+    url: '',
+    method: '',
+    to: '',
+    subject: '',
+    body: '',
+    text: ''
+  });
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  useEffect(() => {
+    setFormData({
+      url: data.url || '',
+      method: data.method || '',
+      to: data.to || '',
+      subject: data.subject || '',
+      body: data.body || '',
+      text: data.text || ''
+    });
+  }, [data]);
+
+  const handleSave = () => {
+    let updatedData = { ...data };
+
+    switch (type) {
+      case 'API':
+        updatedData = { ...updatedData, url: formData.url, method: formData.method };
+        break;
+      case 'EMAIL':
+        updatedData = { ...updatedData, to: formData.to, subject: formData.subject, body: formData.body };
+        break;
+      case 'TEXT':
+        updatedData = { ...updatedData, text: formData.text };
+        break;
+    }
+
+    if (data.onDataChange) {
+      data.onDataChange(id, updatedData);
+    }
+    setShowEditModal(false);
+  };
+
+  const renderEditForm = () => {
+    return (
+      <div>
+        {type === 'API' && (
+          <>
+            <input
+              type="text"
+              value={formData.url}
+              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              placeholder="API URL"
+            />
+            <input
+              type="text"
+              value={formData.method}
+              onChange={(e) => setFormData({ ...formData, method: e.target.value })}
+              placeholder="Method"
+            />
+          </>
+        )}
+        {type === 'EMAIL' && (
+          <>
+            <input
+              type="text"
+              value={formData.to}
+              onChange={(e) => setFormData({ ...formData, to: e.target.value })}
+              placeholder="To"
+            />
+            <input
+              type="text"
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              placeholder="Subject"
+            />
+          </>
+        )}
+        {type === 'TEXT' && (
+          <textarea
+            value={formData.text}
+            onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+            placeholder="Text"
+          />
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div onClick={() => setShowEditModal(true)}>Edit</div>
+      {showEditModal && (
+        <DialogContent>
+          {renderEditForm()}
+          <DialogFooter className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSave}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      )}
+      {/* Connection handles */}
+      {type !== 'START' && <Handle type="target" position={Position.Left} />}
+      {type !== 'END' && <Handle type="source" position={Position.Right} />}
+    </>
+  );
+};
+
+export default memo(WorkflowNode);

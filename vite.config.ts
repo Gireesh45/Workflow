@@ -26,6 +26,10 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
+  server: {
+    host: '0.0.0.0', // Bind the server to all interfaces
+    port: 5000 // Set a suitable port for your application
+  },
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
