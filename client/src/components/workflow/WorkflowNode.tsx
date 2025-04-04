@@ -57,15 +57,10 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
 
   const handleDataChange = (key: string, value: any) => {
     if (data.onDataChange) {
-      const newData = { ...data };
-      delete newData.onDataChange;  // Remove the function before cloning
-      const updatedData = { ...newData, [key]: value };
-      data.onDataChange(id, updatedData);
+      const newData = { ...data, [key]: value };
+      data.onDataChange(id, newData);
+      setShowEditModal(false);
     }
-  };
-
-  const handleSave = () => {
-    setShowEditModal(false);
   };
 
   const getNodeIcon = () => {
@@ -329,7 +324,13 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
           <DialogFooter>
             <Button 
               type="button"
-              onClick={handleSave}
+              onClick={() => {
+                if (type === 'API') {
+                  handleDataChange('url', data.url);
+                  handleDataChange('method', data.method);
+                }
+                setShowEditModal(false);
+              }}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               Save
