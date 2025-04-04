@@ -144,9 +144,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 type="text"
                 value={data.url || ''}
                 onChange={(e) => handleDataChange('url', e.target.value)}
-                className="w-full"
+                className="w-full cursor-text"
                 placeholder="Enter URL"
-                disabled={false}
               />
             </div>
             
@@ -155,7 +154,6 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               <Select 
                 value={data.method || 'GET'} 
                 onValueChange={(value) => handleDataChange('method', value)}
-                disabled={false}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="GET" />
@@ -182,7 +180,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('to', e.target.value)}
                 className="w-full"
                 placeholder="Enter email address"
-                disabled={false}
+                className="w-full cursor-text"
               />
             </div>
             
@@ -194,7 +192,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('subject', e.target.value)}
                 className="w-full"
                 placeholder="Enter subject"
-                disabled={false}
+                className="w-full cursor-text"
               />
             </div>
             
@@ -205,7 +203,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('body', e.target.value)}
                 className="w-full min-h-[100px]"
                 placeholder="Enter email message"
-                disabled={false}
+                className="w-full min-h-[100px] cursor-text"
               />
             </div>
           </>
@@ -221,7 +219,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('text', e.target.value)}
                 className="w-full min-h-[120px]"
                 placeholder="Enter text content"
-                disabled={false}
+                className="w-full min-h-[120px] cursor-text"
               />
             </div>
           </>
