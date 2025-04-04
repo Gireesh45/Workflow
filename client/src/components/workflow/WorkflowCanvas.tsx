@@ -365,66 +365,18 @@ const createDefaultWorkflow = () => {
   const endNode: Node = {
     id: 'end-node',
     type: 'END',
-    position: { x: 400, y: 500 },
+    position: { x: 400, y: 250 },
     data: {},
   };
   
-  // Add default nodes for the example workflow
-  const apiNode: Node = {
-    id: 'api-node',
-    type: 'API',
-    position: { x: 400, y: 200 },
-    data: { 
-      method: 'GET', 
-      url: 'https://api.example.com/data' 
-    },
-  };
-  
-  const emailNode: Node = {
-    id: 'email-node',
-    type: 'EMAIL',
-    position: { x: 400, y: 300 },
-    data: { 
-      to: 'recipient@example.com', 
-      subject: 'Email Subject' 
-    },
-  };
-  
-  const textNode: Node = {
-    id: 'text-node',
-    type: 'TEXT',
-    position: { x: 400, y: 400 },
-    data: { 
-      text: 'Text content...' 
-    },
-  };
-  
-  // Connect all nodes in sequence
+  // Connect start to end
   const edges: Edge[] = [
     {
-      id: 'edge-start-api',
+      id: 'edge-start-end',
       source: 'start-node',
-      target: 'api-node',
-      type: 'plusButtonEdge',
-    },
-    {
-      id: 'edge-api-email',
-      source: 'api-node',
-      target: 'email-node',
-      type: 'plusButtonEdge',
-    },
-    {
-      id: 'edge-email-text',
-      source: 'email-node',
-      target: 'text-node',
-      type: 'plusButtonEdge',
-    },
-    {
-      id: 'edge-text-end',
-      source: 'text-node',
       target: 'end-node',
       type: 'plusButtonEdge',
-    },
+    }
   ];
   
   return {
