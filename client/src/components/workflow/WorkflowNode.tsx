@@ -63,6 +63,17 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
     text: data.text || ''
   });
 
+  useEffect(() => {
+    setFormData({
+      url: data.url || '',
+      method: data.method || 'GET',
+      to: data.to || '',
+      subject: data.subject || '',
+      body: data.body || '',
+      text: data.text || ''
+    });
+  }, [data]);
+
   const handleDataChange = (key: string, value: any) => {
     if (data.onDataChange) {
       const newData = { ...data, [key]: value };
@@ -332,12 +343,12 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <Button 
               type="button"
               onClick={() => {
-                handleDataChange('url', formData.url);
-                handleDataChange('method', formData.method);
-                handleDataChange('to', formData.to);
-                handleDataChange('subject', formData.subject);
-                handleDataChange('body', formData.body);
-                handleDataChange('text', formData.text);
+                if (data.onDataChange) {
+                  data.onDataChange(id, {
+                    ...data,
+                    ...formData
+                  });
+                }
                 setShowEditModal(false);
               }}
               className="bg-blue-500 hover:bg-blue-600 text-white"
