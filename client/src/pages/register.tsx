@@ -105,7 +105,13 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel className="text-sm font-medium">Email Address</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="your.email@example.com" className="rounded-md h-11" {...field} />
+                        <Input 
+                          type="email" 
+                          placeholder="your.email@example.com" 
+                          className="rounded-md h-11" 
+                          {...field}
+                          required
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

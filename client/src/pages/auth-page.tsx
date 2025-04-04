@@ -167,7 +167,13 @@ export default function AuthPage() {
                     <FormItem>
                       <FormLabel className="text-sm font-medium">Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="Type here..." className="rounded-md h-11" {...field} />
+                        <Input 
+                          type="email"
+                          placeholder="Type here..." 
+                          className="rounded-md h-11" 
+                          {...field}
+                          required
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
