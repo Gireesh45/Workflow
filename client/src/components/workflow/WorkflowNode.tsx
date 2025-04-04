@@ -298,25 +298,6 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
 
         
 
-        {/* Node data display */}
-        <div className="px-3 py-2 text-sm">
-          {type === 'API' && (
-            <>
-              <div className="text-gray-600">{data.method || 'GET'}</div>
-              <div className="text-gray-800 truncate">{data.url}</div>
-            </>
-          )}
-          {type === 'EMAIL' && (
-            <>
-              <div className="text-gray-600">To: {data.to}</div>
-              <div className="text-gray-800 truncate">{data.subject}</div>
-            </>
-          )}
-          {type === 'TEXT' && (
-            <div className="text-gray-800 truncate">{data.text}</div>
-          )}
-        </div>
-
         {/* Connection handles */}
         {type !== 'START' && (
           <Handle
