@@ -281,29 +281,6 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         </div>
         
         {/* Content preview */}
-        {type === 'API' && (
-          <div className="px-3 py-2 text-xs text-gray-500">
-            <div className="flex items-start">
-              <span className="font-semibold">{data.method || 'GET'}</span>
-            </div>
-          </div>
-        )}
-        
-        {type === 'EMAIL' && (
-          <div className="px-3 py-2 text-xs text-gray-500">
-            <div className="flex items-start">
-              <span className="font-semibold">{data.to || 'No recipient'}</span>
-            </div>
-          </div>
-        )}
-        
-        {type === 'TEXT' && (
-          <div className="px-3 py-2 text-xs text-gray-500">
-            <div className="flex items-start">
-              <span className="font-semibold">Text</span>
-            </div>
-          </div>
-        )}
         
         {/* Connection handles */}
         {type !== 'START' && (
