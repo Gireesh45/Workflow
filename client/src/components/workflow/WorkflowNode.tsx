@@ -145,7 +145,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 value={data.url || ''}
                 onChange={(e) => handleDataChange('url', e.target.value)}
                 className="w-full"
-                placeholder="https://api.example.com/data"
+                placeholder="Enter URL"
               />
             </div>
             
@@ -179,7 +179,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 value={data.to || ''}
                 onChange={(e) => handleDataChange('to', e.target.value)}
                 className="w-full"
-                placeholder="recipient@example.com"
+                placeholder="Enter email address"
               />
             </div>
             
@@ -190,7 +190,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 value={data.subject || ''}
                 onChange={(e) => handleDataChange('subject', e.target.value)}
                 className="w-full"
-                placeholder="Email Subject"
+                placeholder="Enter subject"
               />
             </div>
             
@@ -200,7 +200,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 value={data.body || ''}
                 onChange={(e) => handleDataChange('body', e.target.value)}
                 className="w-full min-h-[100px]"
-                placeholder="Email body content..."
+                placeholder="Enter email message"
               />
             </div>
           </>
@@ -215,7 +215,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 value={data.text || ''}
                 onChange={(e) => handleDataChange('text', e.target.value)}
                 className="w-full min-h-[120px]"
-                placeholder="Enter text content here..."
+                placeholder="Enter text content"
               />
             </div>
           </>
@@ -281,7 +281,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
           <div className="px-3 py-2 text-xs text-gray-500">
             <div className="flex items-start">
               <span className="font-semibold mr-1 shrink-0">{data.method || 'GET'}</span>
-              <span className="truncate">{data.url || 'https://...'}</span>
+              <span className="truncate">{data.url || ''}</span>
             </div>
           </div>
         )}
@@ -289,10 +289,10 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         {type === 'EMAIL' && (
           <div className="px-3 py-2 text-xs text-gray-500">
             <div className="truncate">
-              To: {data.to || 'recipient@example.com'}
+              To: {data.to || ''}
             </div>
             <div className="truncate">
-              Subject: {data.subject || 'Email Subject'}
+              Subject: {data.subject || ''}
             </div>
             {data.body && (
               <div className="mt-1 text-xs text-gray-500 border-t border-gray-100 pt-1">
@@ -307,7 +307,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         {type === 'TEXT' && (
           <div className="px-3 py-2 text-xs text-gray-500">
             <div className="line-clamp-3">
-              {data.text || 'Text content...'}
+              {data.text || ''}
             </div>
           </div>
         )}
@@ -347,9 +347,6 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit {getNodeLabel()}</DialogTitle>
-            <DialogClose className="absolute right-4 top-4">
-              <X className="h-4 w-4" />
-            </DialogClose>
           </DialogHeader>
           
           <div className="py-4">
@@ -358,6 +355,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
           
           <DialogFooter>
             <Button 
+              type="button"
               onClick={() => setShowEditModal(false)}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
