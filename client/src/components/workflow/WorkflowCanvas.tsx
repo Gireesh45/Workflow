@@ -380,7 +380,7 @@ const createDefaultWorkflow = () => {
   ];
   
   return {
-    nodes: [startNode, apiNode, emailNode, textNode, endNode],
+    nodes: [startNode, endNode],
     edges,
   };
 };
