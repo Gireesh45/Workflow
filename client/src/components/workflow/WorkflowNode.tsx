@@ -57,9 +57,9 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
 
   const handleDataChange = (key: string, value: any) => {
     if (data.onDataChange) {
-      const newData = { ...data, [key]: value };
+      const newData = { ...data };
+      newData[key] = value;
       data.onDataChange(id, newData);
-      setShowEditModal(false);
     }
   };
 
