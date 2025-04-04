@@ -63,3 +63,17 @@ export async function searchWorkflows(userId: string, query: string): Promise<Wo
   }
   return await response.json();
 }
+
+// Get workflow execution results
+export async function getWorkflowResults(workflowId: number | string): Promise<any[]> {
+  try {
+    const response = await apiRequest('GET', `/api/workflows/${workflowId}/results`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow results');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching workflow results:', error);
+    return [];
+  }
+}

@@ -1,9 +1,10 @@
-import { FC, useState } from "react";
-import { Play, Edit2, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { Workflow } from "@shared/schema";
+import React, { FC, useState, useEffect } from "react";
+import { Play, Edit2, MoreVertical, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { format } from "date-fns";
+import { Workflow, WorkflowStatus, WorkflowResult } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import ConfirmRunModal from "./ConfirmRunModal";
 import { executeWorkflow } from "@/lib/workflow";
 import { useToast } from "@/hooks/use-toast";
@@ -20,12 +21,67 @@ interface WorkflowListProps {
   onEdit: (id: string) => void;
 }
 
+// Dummy mock execution history (replace with actual API data)
+const getDummyExecutionHistory = (workflowId: number): any[] => {
+  return [
+    {
+      id: 1,
+      workflowId,
+      status: "PASSED",
+      executedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      results: { message: "Workflow executed successfully" }
+    },
+    {
+      id: 2,
+      workflowId,
+      status: "FAILED", 
+      executedAt: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
+      results: { error: "API call failed with status 500" }
+    },
+    {
+      id: 3,
+      workflowId,
+      status: "FAILED",
+      executedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+      results: { error: "Email sending failed: Invalid recipient address" }
+    }
+  ];
+};
+
 const WorkflowList: FC<WorkflowListProps> = ({ workflows, isLoading, onEdit }) => {
   const { toast } = useToast();
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [showRunModal, setShowRunModal] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [activePage, setActivePage] = useState(1);
+  const [expandedWorkflows, setExpandedWorkflows] = useState<Record<string, boolean>>({});
+  const [workflowResults, setWorkflowResults] = useState<Record<number, any[]>>({});
+
+  // Get execution history for workflows
+  useEffect(() => {
+    const fetchResults = async () => {
+      const results = {} as Record<number, any[]>;
+      
+      // In a real implementation, we would fetch from the API
+      workflows.forEach((workflow) => {
+        if (workflow.id) {
+          results[workflow.id] = getDummyExecutionHistory(workflow.id);
+        }
+      });
+      
+      setWorkflowResults(results);
+    };
+    
+    fetchResults();
+  }, [workflows]);
+  
+  // Toggle expanded state for a workflow
+  const toggleWorkflowExpansion = (workflowId: string) => {
+    setExpandedWorkflows(prev => ({
+      ...prev,
+      [workflowId]: !prev[workflowId]
+    }));
+  };
 
   // Handle workflow run button click
   const handleRunClick = (workflow: Workflow) => {
@@ -190,66 +246,120 @@ const WorkflowList: FC<WorkflowListProps> = ({ workflows, isLoading, onEdit }) =
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {workflows.map((workflow) => (
-                <tr key={workflow.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{workflow.name ?? "Workflow Name here..."}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">#{workflow.id}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {formatEditedDate(workflow.updatedAt || new Date())}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-500 truncate max-w-xs">
-                      {workflow.description ?? "Some Description here Regarding The flow..."}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end items-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mx-1"
-                        onClick={() => handleRunClick(workflow)}
-                        disabled={isExecuting}
-                      >
-                        Execute
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mx-1"
-                        onClick={() => onEdit(workflow.id?.toString() || "")}
-                      >
-                        Edit
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 mx-1">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => alert("Duplicate feature coming soon")}>
-                            Duplicate
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => alert("Export feature coming soon")}>
-                            Export
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600" onClick={() => alert("Delete feature coming soon")}>
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 mx-1">
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                <React.Fragment key={workflow.id?.toString()}>
+                  <tr className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{workflow.name ?? "Workflow Name here..."}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">#{workflow.id}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {formatEditedDate(workflow.updatedAt || new Date())}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-500 truncate max-w-xs">
+                        {workflow.description ?? "Some Description here Regarding The flow..."}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end items-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mx-1"
+                          onClick={() => handleRunClick(workflow)}
+                          disabled={isExecuting}
+                        >
+                          Execute
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mx-1"
+                          onClick={() => onEdit(workflow.id?.toString() || "")}
+                        >
+                          Edit
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 mx-1">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => alert("Duplicate feature coming soon")}>
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => alert("Export feature coming soon")}>
+                              Export
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600" onClick={() => alert("Delete feature coming soon")}>
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 mx-1"
+                          onClick={() => toggleWorkflowExpansion(workflow.id?.toString() || "")}
+                        >
+                          {expandedWorkflows[workflow.id?.toString() || ""] ? 
+                            <ChevronUp className="h-4 w-4" /> : 
+                            <ChevronDown className="h-4 w-4" />
+                          }
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Execution History Panel */}
+                  {expandedWorkflows[workflow.id?.toString() || ""] && workflow.id && (
+                    <tr>
+                      <td colSpan={5} className="bg-gray-50 px-4 py-2">
+                        <div className="px-2 py-3">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">Execution History</h4>
+                          
+                          <div className="space-y-3">
+                            {workflowResults[workflow.id]?.length > 0 ? (
+                              workflowResults[workflow.id].map((result, index) => (
+                                <div key={index} className="bg-white rounded-md border p-3 flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center space-x-2 mb-1">
+                                      <Badge className={result.status === "PASSED" 
+                                        ? "bg-green-500 text-white border-transparent hover:bg-green-600" 
+                                        : "bg-destructive text-destructive-foreground border-transparent hover:bg-destructive/80"}>
+                                        {result.status}
+                                      </Badge>
+                                      <span className="text-xs text-gray-500">
+                                        {new Date(result.executedAt).toLocaleDateString()} {new Date(result.executedAt).toLocaleTimeString()}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600">
+                                      {result.status === "PASSED" 
+                                        ? (result.results)?.message || "Workflow executed successfully" 
+                                        : (result.results)?.error || "Execution failed"}
+                                    </p>
+                                  </div>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-4">
+                                <p className="text-sm text-gray-500">No execution history available</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
