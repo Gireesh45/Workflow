@@ -325,9 +325,19 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <Button 
               type="button"
               onClick={() => {
-                if (type === 'API') {
-                  handleDataChange('url', data.url);
-                  handleDataChange('method', data.method);
+                switch (type) {
+                  case 'API':
+                    handleDataChange('url', data.url);
+                    handleDataChange('method', data.method);
+                    break;
+                  case 'EMAIL':
+                    handleDataChange('to', data.to);
+                    handleDataChange('subject', data.subject);
+                    handleDataChange('body', data.body);
+                    break;
+                  case 'TEXT':
+                    handleDataChange('text', data.text);
+                    break;
                 }
                 setShowEditModal(false);
               }}
