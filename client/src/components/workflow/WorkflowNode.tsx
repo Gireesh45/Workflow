@@ -291,26 +291,16 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         
         {type === 'EMAIL' && (
           <div className="px-3 py-2 text-xs text-gray-500">
-            <div className="truncate">
-              To: {data.to || ''}
+            <div className="flex items-start">
+              <span className="font-semibold">{data.to || 'No recipient'}</span>
             </div>
-            <div className="truncate">
-              Subject: {data.subject || ''}
-            </div>
-            {data.body && (
-              <div className="mt-1 text-xs text-gray-500 border-t border-gray-100 pt-1">
-                <div className="line-clamp-2 text-xs italic">
-                  {data.body}
-                </div>
-              </div>
-            )}
           </div>
         )}
         
         {type === 'TEXT' && (
           <div className="px-3 py-2 text-xs text-gray-500">
-            <div className="line-clamp-3">
-              {data.text || ''}
+            <div className="flex items-start">
+              <span className="font-semibold">Text</span>
             </div>
           </div>
         )}
