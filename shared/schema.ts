@@ -27,6 +27,7 @@ export const workflows = pgTable("workflows", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
+  description: text("description"),
   status: text("status").notNull().default("IDLE"),
   lastRun: timestamp("last_run"),
   nodes: jsonb("nodes").notNull(),
@@ -87,6 +88,7 @@ export const registerUserSchema = z.object({
 export const insertWorkflowSchema = createInsertSchema(workflows).pick({
   userId: true,
   name: true,
+  description: true,
   status: true,
   nodes: true,
   edges: true,
