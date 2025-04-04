@@ -365,14 +365,14 @@ const createDefaultWorkflow = () => {
     id: 'start-node',
     type: 'START',
     position: { x: 400, y: 100 },
-    data: { label: 'Start' },
+    data: { label: 'Start', type: 'START' },
   };
   
   const endNode: Node = {
     id: 'end-node',
     type: 'END',
     position: { x: 400, y: 400 },
-    data: { label: 'End' },
+    data: { label: 'End', type: 'END' },
   };
   
   // Connect start to end with plusButtonEdge type
@@ -384,6 +384,7 @@ const createDefaultWorkflow = () => {
       type: 'plusButtonEdge',
       animated: true,
       style: { stroke: '#888', strokeWidth: 2 },
+      data: { onDataChange: () => {} }, // Add empty data handler
       markerEnd: {
         type: MarkerType.ArrowClosed,
         color: '#888',
