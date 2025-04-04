@@ -54,7 +54,7 @@ interface NodeData {
 
 const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }) => {
   const [showEditModal, setShowEditModal] = useState(false);
-  
+
   const handleDataChange = (key: string, value: any) => {
     if (data.onDataChange) {
       data.onDataChange(id, { ...data, [key]: value });
@@ -117,10 +117,10 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         return 'Unknown';
     }
   };
-  
+
   const getStatusIcon = () => {
     if (!data.status) return null;
-    
+
     switch (data.status) {
       case 'PASSED':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -144,11 +144,11 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 type="text"
                 value={data.url || ''}
                 onChange={(e) => handleDataChange('url', e.target.value)}
-                className="w-full cursor-text"
+                className="w-full"
                 placeholder="Enter URL"
               />
             </div>
-            
+
             <div className="mb-4">
               <Label className="text-sm font-medium mb-1 block">Method</Label>
               <Select 
@@ -168,7 +168,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             </div>
           </>
         );
-        
+
       case 'EMAIL':
         return (
           <>
@@ -180,10 +180,9 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('to', e.target.value)}
                 className="w-full"
                 placeholder="Enter email address"
-                className="w-full cursor-text"
               />
             </div>
-            
+
             <div className="mb-4">
               <Label className="text-sm font-medium mb-1 block">Subject</Label>
               <Input
@@ -192,10 +191,9 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('subject', e.target.value)}
                 className="w-full"
                 placeholder="Enter subject"
-                className="w-full cursor-text"
               />
             </div>
-            
+
             <div className="mb-4">
               <Label className="text-sm font-medium mb-1 block">Message</Label>
               <Textarea
@@ -203,12 +201,11 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('body', e.target.value)}
                 className="w-full min-h-[100px]"
                 placeholder="Enter email message"
-                className="w-full min-h-[100px] cursor-text"
               />
             </div>
           </>
         );
-        
+
       case 'TEXT':
         return (
           <>
@@ -219,19 +216,18 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 onChange={(e) => handleDataChange('text', e.target.value)}
                 className="w-full min-h-[120px]"
                 placeholder="Enter text content"
-                className="w-full min-h-[120px] cursor-text"
               />
             </div>
           </>
         );
-        
+
       case 'CONDITION':
         return (
           <div className="text-center py-4">
             <p className="text-sm text-gray-500">Condition settings will be available soon</p>
           </div>
         );
-        
+
       default:
         return null;
     }
@@ -246,14 +242,14 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               {getNodeIcon()}
             </div>
             <span className="ml-2 font-medium text-sm">{getNodeLabel()}</span>
-            
+
             {/* Status indicator */}
             {data.status && (
               <div className="ml-2">
                 {getStatusIcon()}
               </div>
             )}
-            
+
             {/* Only show menu for non-START and non-END nodes */}
             {(type !== 'START' && type !== 'END') && (
               <div className="ml-auto">
@@ -279,9 +275,9 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             )}
           </div>
         </div>
-        
+
         {/* Content preview */}
-        
+
         {/* Connection handles */}
         {type !== 'START' && (
           <Handle
@@ -292,7 +288,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             className="w-2.5 h-2.5 rounded-full bg-gray-400 border-2 border-white"
           />
         )}
-        
+
         {type !== 'END' && (
           <Handle
             type="source"
@@ -311,18 +307,18 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
       <div className="workflow-node" style={{ width: '180px' }}>
         {renderNodeContent()}
       </div>
-      
+
       {/* Edit Node Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit {getNodeLabel()}</DialogTitle>
           </DialogHeader>
-          
+
           <div className="py-4">
             {renderEditForm()}
           </div>
-          
+
           <DialogFooter>
             <Button 
               type="button"
