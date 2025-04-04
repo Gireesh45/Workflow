@@ -57,7 +57,9 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
 
   const handleDataChange = (key: string, value: any) => {
     if (data.onDataChange) {
-      data.onDataChange(id, { ...data, [key]: value });
+      const newData = { ...data, [key]: value };
+      data.onDataChange(id, newData);
+      setShowEditModal(false);
     }
   };
 
@@ -322,7 +324,13 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
           <DialogFooter>
             <Button 
               type="button"
-              onClick={() => setShowEditModal(false)}
+              onClick={() => {
+                if (type === 'API') {
+                  handleDataChange('url', data.url);
+                  handleDataChange('method', data.method);
+                }
+                setShowEditModal(false);
+              }}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               Save
