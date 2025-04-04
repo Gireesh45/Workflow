@@ -54,6 +54,14 @@ interface NodeData {
 
 const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }) => {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [formData, setFormData] = useState({
+    url: data.url || '',
+    method: data.method || 'GET',
+    to: data.to || '',
+    subject: data.subject || '',
+    body: data.body || '',
+    text: data.text || ''
+  });
 
   const handleDataChange = (key: string, value: any) => {
     if (data.onDataChange) {
@@ -143,8 +151,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               <Label className="text-sm font-medium mb-1 block">URL</Label>
               <Input
                 type="text"
-                value={data.url || ''}
-                onChange={(e) => handleDataChange('url', e.target.value)}
+                value={formData.url}
+                onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
                 className="w-full"
                 placeholder="Enter URL"
               />
@@ -324,7 +332,13 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <Button 
               type="button"
               onClick={() => {
-                setShowEditModal(false); //Close modal after saving
+                handleDataChange('url', formData.url);
+                handleDataChange('method', formData.method);
+                handleDataChange('to', formData.to);
+                handleDataChange('subject', formData.subject);
+                handleDataChange('body', formData.body);
+                handleDataChange('text', formData.text);
+                setShowEditModal(false);
               }}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
