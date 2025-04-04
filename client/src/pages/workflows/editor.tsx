@@ -313,7 +313,7 @@ export default function WorkflowEditorPage() {
                 <Input 
                   type="text" 
                   placeholder="Name here..." 
-                  value={workflow.name || ""} 
+                  value={workflow.name} 
                   onChange={handleNameChange}
                   className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
                 />
