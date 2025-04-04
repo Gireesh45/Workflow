@@ -167,11 +167,13 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
         id: `e${uuidv4()}`,
         source: sourceId,
         target: newNode.id,
-        type: 'plusButtonEdge', // Set edge type to plusButtonEdge
+        type: 'plusButtonEdge',
         animated: true,
-        style: { strokeWidth: 2 },
+        style: { stroke: '#888', strokeWidth: 2 },
+        data: { onDataChange: onNodeDataChange },
         markerEnd: {
           type: MarkerType.ArrowClosed,
+          color: '#888',
         },
       };
       
@@ -179,11 +181,13 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
         id: `e${uuidv4()}`,
         source: newNode.id,
         target: targetId,
-        type: 'plusButtonEdge', // Set edge type to plusButtonEdge
+        type: 'plusButtonEdge',
         animated: true,
-        style: { strokeWidth: 2 },
+        style: { stroke: '#888', strokeWidth: 2 },
+        data: { onDataChange: onNodeDataChange },
         markerEnd: {
           type: MarkerType.ArrowClosed,
+          color: '#888',
         },
       };
       
@@ -332,10 +336,12 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
               maxZoom={2}
               defaultEdgeOptions={{
                 animated: true,
-                style: { strokeWidth: 2 },
+                style: { stroke: '#888', strokeWidth: 2 },
                 type: 'plusButtonEdge',
+                data: { onDataChange: onNodeDataChange },
                 markerEnd: {
                   type: MarkerType.ArrowClosed,
+                  color: '#888',
                 },
               }}
             >
