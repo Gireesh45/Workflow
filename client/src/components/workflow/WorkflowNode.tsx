@@ -352,14 +352,15 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               onClick={() => {
                 const updatedData = {
                   ...data,
-                  url: formData.url || data.url,
-                  method: formData.method || data.method,
-                  to: formData.to || data.to,
-                  subject: formData.subject || data.subject,
-                  body: formData.body || data.body,
-                  text: formData.text || data.text,
-                  type: data.type, // Preserve node type
+                  url: formData.url,
+                  method: formData.method,
+                  to: formData.to,
+                  subject: formData.subject,
+                  body: formData.body,
+                  text: formData.text,
+                  type: type, // Use the node type prop
                   status: data.status || 'IDLE',
+                  label: getNodeLabel(), // Preserve the node label
                 };
                 if (data.onDataChange) {
                   data.onDataChange(id, updatedData);
