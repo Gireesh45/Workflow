@@ -217,7 +217,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
                 value={data.text || ''}
                 onChange={(e) => handleDataChange('text', e.target.value)}
                 className="w-full min-h-[120px]"
-                placeholder="Enter text content"
+                autoFocus
               />
             </div>
           </>
