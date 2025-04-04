@@ -161,11 +161,11 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <div className="mb-4">
               <Label className="text-sm font-medium mb-1 block">Method</Label>
               <Select 
-                value={data.method || 'GET'} 
-                onValueChange={(value) => handleDataChange('method', value)}
+                value={formData.method} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, method: value }))}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="GET" />
+                  <SelectValue placeholder="Select Method" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="GET">GET</SelectItem>
