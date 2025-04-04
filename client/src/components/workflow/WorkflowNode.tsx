@@ -339,7 +339,14 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             {renderEditForm()}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowEditModal(false)}
+            >
+              Cancel
+            </Button>
             <Button 
               type="button"
               onClick={() => {
@@ -359,7 +366,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               }}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              Save
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
