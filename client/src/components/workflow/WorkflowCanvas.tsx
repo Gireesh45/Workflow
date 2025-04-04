@@ -93,6 +93,7 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
       const newEdge = {
         ...connection,
         id: `e${uuidv4()}`,
+        type: 'plusButtonEdge', // Set edge type to plusButtonEdge
         animated: true,
         style: { strokeWidth: 2 },
         markerEnd: {
@@ -166,6 +167,7 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
         id: `e${uuidv4()}`,
         source: sourceId,
         target: newNode.id,
+        type: 'plusButtonEdge', // Set edge type to plusButtonEdge
         animated: true,
         style: { strokeWidth: 2 },
         markerEnd: {
@@ -177,6 +179,7 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
         id: `e${uuidv4()}`,
         source: newNode.id,
         target: targetId,
+        type: 'plusButtonEdge', // Set edge type to plusButtonEdge
         animated: true,
         style: { strokeWidth: 2 },
         markerEnd: {
@@ -259,13 +262,21 @@ const WorkflowCanvasComponent: FC<WorkflowCanvasProps> = ({ nodes, edges, isLoad
 
   // Custom edge with a plus button
   const edgeWithPlusButton = useCallback(
-    ({ id, source, target }: FlowEdge) => {
+    (props: FlowEdge) => {
       // For custom edges with buttons
+      const { id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition } = props;
+      
       return (
         <AddNodeButton
           id={id}
           source={source}
           target={target}
+          sourceX={sourceX}
+          sourceY={sourceY}
+          targetX={targetX}
+          targetY={targetY}
+          sourcePosition={sourcePosition}
+          targetPosition={targetPosition}
           isSelected={selectedEdge === id}
           onAddNode={(type: string) => addNodeBetween(source, target, id, type as NodeType)}
           nodeOptions={nodeOptions}
