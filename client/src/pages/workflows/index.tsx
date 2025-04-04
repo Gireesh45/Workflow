@@ -76,7 +76,7 @@ export default function WorkflowsPage() {
           <div className="mb-6 flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-gray-800">Workflow Creator - List View</h1>
             <Button 
-              className="bg-green-600 hover:bg-green-700 text-white" 
+              className="bg-black hover:bg-black/90 text-white" 
               onClick={handleCreateWorkflow}
             >
               <Plus className="h-4 w-4 mr-2" />
