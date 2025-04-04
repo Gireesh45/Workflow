@@ -296,7 +296,7 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
           </div>
         </div>
 
-        
+
 
         {/* Connection handles */}
         {type !== 'START' && (
@@ -350,23 +350,38 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <Button 
               type="button"
               onClick={() => {
-                const updatedData = {
-                  ...data,
-                  url: formData.url,
-                  method: formData.method,
-                  to: formData.to,
-                  subject: formData.subject,
-                  body: formData.body,
-                  text: formData.text,
-                  type: type, // Use the node type prop
-                  status: data.status || 'IDLE',
-                  label: getNodeLabel(), // Preserve the node label
-                };
-                if (data.onDataChange) {
-                  data.onDataChange(id, updatedData);
-                }
-                setShowEditModal(false);
-              }}
+                  let updatedData = { ...data };
+
+                  // Only update fields relevant to the node type
+                  switch (type) {
+                    case 'API':
+                      updatedData = {
+                        ...updatedData,
+                        url: formData.url,
+                        method: formData.method
+                      };
+                      break;
+                    case 'EMAIL':
+                      updatedData = {
+                        ...updatedData,
+                        to: formData.to,
+                        subject: formData.subject,
+                        body: formData.body
+                      };
+                      break;
+                    case 'TEXT':
+                      updatedData = {
+                        ...updatedData,
+                        text: formData.text
+                      };
+                      break;
+                  }
+
+                  if (data.onDataChange) {
+                    data.onDataChange(id, updatedData);
+                  }
+                  setShowEditModal(false);
+                }}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               Save Changes
