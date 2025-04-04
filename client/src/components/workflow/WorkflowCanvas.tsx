@@ -365,23 +365,29 @@ const createDefaultWorkflow = () => {
     id: 'start-node',
     type: 'START',
     position: { x: 400, y: 100 },
-    data: {},
+    data: { label: 'Start' },
   };
   
   const endNode: Node = {
     id: 'end-node',
     type: 'END',
-    position: { x: 400, y: 250 },
-    data: {},
+    position: { x: 400, y: 400 },
+    data: { label: 'End' },
   };
   
-  // Connect start to end
+  // Connect start to end with plusButtonEdge type
   const edges: Edge[] = [
     {
       id: 'edge-start-end',
       source: 'start-node',
       target: 'end-node',
       type: 'plusButtonEdge',
+      animated: true,
+      style: { stroke: '#888', strokeWidth: 2 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#888',
+      },
     }
   ];
   
