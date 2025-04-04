@@ -13,6 +13,9 @@ import {
   X,
   Copy,
   FileText,
+  CheckCircle,
+  AlertCircle,
+  PauseCircle,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,6 +48,7 @@ interface NodeData {
   subject?: string;
   body?: string;
   text?: string;
+  status?: 'PASSED' | 'FAILED' | 'PAUSED' | 'IDLE';
   onDataChange?: (id: string, data: any) => void;
 }
 
@@ -111,6 +115,21 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
         return 'End';
       default:
         return 'Unknown';
+    }
+  };
+  
+  const getStatusIcon = () => {
+    if (!data.status) return null;
+    
+    switch (data.status) {
+      case 'PASSED':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'FAILED':
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case 'PAUSED':
+        return <PauseCircle className="h-4 w-4 text-yellow-500" />;
+      default:
+        return null;
     }
   };
 
@@ -223,6 +242,14 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               {getNodeIcon()}
             </div>
             <span className="ml-2 font-medium text-sm">{getNodeLabel()}</span>
+            
+            {/* Status indicator */}
+            {data.status && (
+              <div className="ml-2">
+                {getStatusIcon()}
+              </div>
+            )}
+            
             <div className="ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -87,33 +87,35 @@ const AddNodeButton: FC<AddNodeButtonProps> = ({
         className="edgebutton-foreignobject"
         requiredExtensions="http://www.w3.org/1999/xhtml"
       >
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              className="h-6 w-6 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-100 p-0 flex items-center justify-center"
-              variant="ghost"
-            >
-              <Plus className="h-3.5 w-3.5 text-gray-500" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2" align="center">
-            <div className="flex flex-col space-y-1">
-              {nodeOptions.map((option) => (
-                <Button
-                  key={option.type}
-                  onClick={() => handleSelectNodeType(option.type)}
-                  className="w-full justify-start text-sm font-normal px-2 py-1.5 h-auto"
-                  variant="ghost"
-                >
-                  <div className={`w-5 h-5 rounded-full ${option.color} flex items-center justify-center text-white mr-2 shrink-0`}>
-                    <option.icon className="h-3 w-3" />
-                  </div>
-                  <span>{option.label}</span>
-                </Button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center justify-center w-full h-full">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                className="h-6 w-6 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-100 p-0 flex items-center justify-center"
+                variant="ghost"
+              >
+                <Plus className="h-3.5 w-3.5 text-gray-500" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2" align="center">
+              <div className="flex flex-col space-y-1">
+                {nodeOptions.map((option) => (
+                  <Button
+                    key={option.type}
+                    onClick={() => handleSelectNodeType(option.type)}
+                    className="w-full justify-start text-sm font-normal px-2 py-1.5 h-auto"
+                    variant="ghost"
+                  >
+                    <div className={`w-5 h-5 rounded-full ${option.color} flex items-center justify-center text-white mr-2 shrink-0`}>
+                      <option.icon className="h-3 w-3" />
+                    </div>
+                    <span>{option.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </foreignObject>
     </>
   );
