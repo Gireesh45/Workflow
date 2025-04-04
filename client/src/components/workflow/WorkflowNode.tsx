@@ -185,8 +185,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               <Label className="text-sm font-medium mb-1 block">To</Label>
               <Input
                 type="email"
-                value={data.to || ''}
-                onChange={(e) => handleDataChange('to', e.target.value)}
+                value={formData.to}
+                onChange={(e) => setFormData(prev => ({ ...prev, to: e.target.value }))}
                 className="w-full"
                 placeholder="Enter email address"
               />
@@ -196,8 +196,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
               <Label className="text-sm font-medium mb-1 block">Subject</Label>
               <Input
                 type="text"
-                value={data.subject || ''}
-                onChange={(e) => handleDataChange('subject', e.target.value)}
+                value={formData.subject}
+                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
                 className="w-full"
                 placeholder="Enter subject"
               />
@@ -206,8 +206,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <div className="mb-4">
               <Label className="text-sm font-medium mb-1 block">Message</Label>
               <Textarea
-                value={data.body || ''}
-                onChange={(e) => handleDataChange('body', e.target.value)}
+                value={formData.body}
+                onChange={(e) => setFormData(prev => ({ ...prev, body: e.target.value }))}
                 className="w-full min-h-[100px]"
                 placeholder="Enter email message"
               />
@@ -221,8 +221,8 @@ const WorkflowNode: FC<NodeProps<NodeData>> = ({ id, type, data, isConnectable }
             <div className="mb-4">
               <Label className="text-sm font-medium mb-1 block">Text Content</Label>
               <Textarea
-                value={data.text || ''}
-                onChange={(e) => handleDataChange('text', e.target.value)}
+                value={formData.text}
+                onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
                 className="w-full min-h-[120px]"
                 autoFocus
               />
