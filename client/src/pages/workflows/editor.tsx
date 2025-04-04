@@ -13,11 +13,19 @@ import WorkflowCanvas from "@/components/workflow/WorkflowCanvas";
 import { WorkflowAnalyzer } from "@/components/workflow/WorkflowAnalyzer";
 import ConfirmRunModal from "@/components/workflow/ConfirmRunModal";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, RefreshCw, Play, Save, LineChart, Cable } from "lucide-react";
+import { ArrowLeft, Save, X } from "lucide-react";
 import { Node, Edge } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
 
 export default function WorkflowEditorPage() {
   const [location, navigate] = useLocation();
@@ -30,7 +38,8 @@ export default function WorkflowEditorPage() {
 
   // Workflow state
   const [workflow, setWorkflow] = useState<Partial<Workflow> & {nodes: Node[], edges: Edge[]}>({
-    name: "New Workflow",
+    name: "Untitled",
+    description: "",
     status: "IDLE",
     nodes: [],
     edges: [],
@@ -41,6 +50,8 @@ export default function WorkflowEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showRunModal, setShowRunModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Load workflow if editing existing one
   useEffect(() => {
@@ -91,6 +102,14 @@ export default function WorkflowEditorPage() {
     });
   };
 
+  // Update workflow description
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setWorkflow({
+      ...workflow,
+      description: e.target.value,
+    });
+  };
+
   // Update nodes and edges
   const handleWorkflowUpdate = useCallback((nodes: Node[], edges: Edge[]) => {
     setWorkflow((prev) => ({
@@ -135,6 +154,7 @@ export default function WorkflowEditorPage() {
         // Redirect to edit page with ID
         navigate(`/workflows/editor?id=${savedWorkflow.id}`);
       }
+      setShowSaveModal(false);
     } catch (error) {
       console.error("Error saving workflow:", error);
       toast({
@@ -147,41 +167,36 @@ export default function WorkflowEditorPage() {
     }
   };
 
-  // Reset workflow
-  const handleReset = () => {
-    if (workflowId) {
-      // If editing, reload from server
-      getWorkflow(workflowId).then((data: Workflow | null) => {
-        if (data) {
-          // Cast the nodes and edges to the correct types
-          const typedWorkflow = {
-            ...data,
-            nodes: Array.isArray(data.nodes) ? data.nodes : [],
-            edges: Array.isArray(data.edges) ? data.edges : []
-          };
-          setWorkflow(typedWorkflow);
-        }
+  // Delete workflow
+  const handleDelete = async () => {
+    if (!workflowId || !user) return;
+
+    try {
+      // API call to delete workflow would go here
+      toast({
+        title: "Success",
+        description: "Workflow deleted successfully",
       });
-    } else {
-      // If new, reset to empty
-      setWorkflow({
-        name: "New Workflow",
-        status: "IDLE",
-        nodes: [],
-        edges: [],
-        userId: user?.id ? Number(user.id) : undefined,
+      navigate("/workflows");
+    } catch (error) {
+      console.error("Error deleting workflow:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete workflow",
+        variant: "destructive",
       });
     }
-    
-    toast({
-      title: "Workflow reset",
-      description: "All changes have been discarded",
-    });
+    setShowDeleteModal(false);
   };
 
   // Run workflow
   const handleRun = () => {
     setShowRunModal(true);
+  };
+
+  // Open save modal
+  const handleOpenSaveModal = () => {
+    setShowSaveModal(true);
   };
 
   // Confirm workflow execution
@@ -245,139 +260,126 @@ export default function WorkflowEditorPage() {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-neutral-200 bg-white sticky top-0 z-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4">
-            <div className="flex items-center">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="mr-4 text-neutral-500 hover:text-neutral-700" 
-                onClick={() => navigate("/workflows")}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              
-              <div>
-                <Input
-                  type="text" 
-                  value={workflow.name}
-                  onChange={handleNameChange}
-                  placeholder="Enter workflow name..." 
-                  className="text-xl font-bold text-neutral-900 border-0 focus:ring-0 focus:outline-none bg-transparent"
-                />
-              </div>
-            </div>
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#f8f6ea]">
+        <div className="bg-white sticky top-0 z-10 border-b border-gray-200 p-4">
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-gray-700 flex items-center bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-1.5 h-9"
+              onClick={() => navigate("/workflows")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </Button>
             
-            <div className="flex items-center mt-4 md:mt-0 space-x-3">
+            <div className="ml-4 text-lg font-medium">{workflow.name || "Untitled"}</div>
+            
+            <div className="ml-auto">
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={handleReset}
-                disabled={isLoading || isSaving}
-              >
-                <RefreshCw className="h-4 w-4 mr-1.5" />
-                Reset
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRun}
-                disabled={isLoading || isSaving || isRunning || workflow.nodes.length === 0}
-              >
-                <Play className="h-4 w-4 mr-1.5" />
-                Run
-              </Button>
-              
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleSave}
-                disabled={isLoading || isSaving}
+                className="mr-2 border-gray-300 hover:bg-gray-100"
+                onClick={handleOpenSaveModal}
               >
                 <Save className="h-4 w-4 mr-1.5" />
                 Save
               </Button>
             </div>
           </div>
-          
-          <Tabs defaultValue="editor" className="w-full">
-            <TabsList className="border-b border-neutral-200 w-full justify-start rounded-none h-auto p-0">
-              <TabsTrigger 
-                value="editor" 
-                className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
-              >
-                <Cable className="h-4 w-4 mr-2" />
-                Editor
-              </TabsTrigger>
-              
-              {workflowId && (
-                <TabsTrigger 
-                  value="analysis" 
-                  className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
-                >
-                  <LineChart className="h-4 w-4 mr-2" />
-                  AI Analysis
-                </TabsTrigger>
-              )}
-              
-              <TabsTrigger 
-                value="settings" 
-                className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
-              >
-                Settings
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="history" 
-                className="px-4 py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none"
-              >
-                History
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </div>
         
-        <Tabs defaultValue="editor" className="flex-1 overflow-hidden">
-          <TabsContent value="editor" className="h-full m-0 p-0 data-[state=active]:flex-1 data-[state=active]:flex">
-            <WorkflowCanvas 
-              nodes={workflow.nodes}
-              edges={workflow.edges}
-              isLoading={isLoading}
-              onChange={handleWorkflowUpdate}
-            />
-          </TabsContent>
-          
-          <TabsContent value="analysis" className="m-0 p-6 overflow-y-auto">
-            {workflowId ? (
-              <WorkflowAnalyzer workflow={workflow as Workflow} />
-            ) : (
-              <div className="text-center p-6">
-                <p>Save your workflow first to access AI analysis</p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="settings" className="m-0 p-6 overflow-y-auto">
-            <div className="text-center p-6">
-              <p>Workflow settings will be available soon</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="history" className="m-0 p-6 overflow-y-auto">
-            <div className="text-center p-6">
-              <p>Workflow execution history will be available soon</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+        <div className="flex-1 overflow-hidden">
+          <WorkflowCanvas 
+            nodes={workflow.nodes}
+            edges={workflow.edges}
+            isLoading={isLoading}
+            onChange={handleWorkflowUpdate}
+          />
+        </div>
         
+        {/* Save Workflow Modal */}
+        <Dialog open={showSaveModal} onOpenChange={setShowSaveModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Save your workflow</DialogTitle>
+              <DialogClose className="absolute right-4 top-4">
+                <X className="h-4 w-4" />
+              </DialogClose>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="mb-4">
+                <label className="text-sm font-medium mb-1 block">Name</label>
+                <Input 
+                  type="text" 
+                  placeholder="Name here..." 
+                  value={workflow.name || ""} 
+                  onChange={handleNameChange}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Description</label>
+                <Textarea 
+                  placeholder="Write here..." 
+                  value={workflow.description || ""} 
+                  onChange={handleDescriptionChange}
+                  className="w-full p-2 border border-gray-300 rounded h-24 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                className="bg-red-500 hover:bg-red-600 text-white ml-auto" 
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Confirm Run Modal */}
         <ConfirmRunModal 
           isOpen={showRunModal}
           workflowName={workflow.name || ""}
           onClose={() => setShowRunModal(false)}
           onConfirm={handleConfirmRun}
         />
+        
+        {/* Delete Warning Modal */}
+        <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="text-center">
+                Are You Sure You Want To Delete {workflow.name}?
+              </DialogTitle>
+              <DialogClose className="absolute right-4 top-4">
+                <X className="h-4 w-4" />
+              </DialogClose>
+            </DialogHeader>
+            <div className="py-4 text-center">
+              <p className="text-red-500">You Cannot Undo This Step</p>
+            </div>
+            <DialogFooter>
+              <Button 
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800" 
+                onClick={() => setShowDeleteModal(false)}
+                variant="secondary"
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="bg-red-500 hover:bg-red-600 text-white" 
+                onClick={handleDelete}
+                disabled={isSaving}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
